@@ -1,0 +1,58 @@
+SARAH CHEN
+Backend Engineer
+sarah.chen@email.com | (555) 987-6543 | San Francisco, CA
+
+PROFESSIONAL SUMMARY
+Backend engineer with 6 years of experience building distributed systems and microservices. Expert in Node.js, Python, and cloud infrastructure. Passionate about system design and scalability.
+
+WORK EXPERIENCE
+
+Lead Backend Engineer | CloudTech Solutions | Mar 2021 - Present
+• Architected microservices infrastructure serving 10M+ requests/day
+• Led migration from monolith to microservices using Node.js and Kubernetes
+• Implemented event-driven architecture using RabbitMQ and Kafka
+• Reduced API response time by 60% through optimization and caching
+• Managed team of 4 backend engineers
+• Technologies: Node.js, TypeScript, PostgreSQL, Redis, Kubernetes, AWS
+
+Backend Engineer | DataFlow Inc. | Jul 2019 - Feb 2021
+• Developed RESTful and GraphQL APIs using Node.js and Express
+• Designed database schemas and optimized queries for PostgreSQL
+• Implemented authentication using OAuth 2.0 and JWT
+• Built CI/CD pipelines with GitHub Actions and Docker
+• Technologies: Node.js, GraphQL, PostgreSQL, MongoDB, Docker
+
+Software Engineer | StartupHub | Jan 2018 - Jun 2019
+• Built backend services for SaaS platform using Python and Django
+• Integrated third-party APIs (Stripe, Twilio, SendGrid)
+• Wrote unit and integration tests achieving 85% code coverage
+• Technologies: Python, Django, MySQL, AWS Lambda
+
+EDUCATION
+
+Master of Science in Computer Science
+University of California, Berkeley | 2016 - 2017
+
+Bachelor of Science in Software Engineering  
+San Jose State University | 2012 - 2016
+
+TECHNICAL SKILLS
+
+Languages: JavaScript, TypeScript, Python, Go, SQL
+Backend: Node.js, Express.js, NestJS, Django, FastAPI
+Databases: PostgreSQL, MongoDB, Redis, MySQL, DynamoDB
+Cloud: AWS (EC2, Lambda, RDS, S3, ECS), Google Cloud Platform
+DevOps: Kubernetes, Docker, Jenkins, GitHub Actions, Terraform
+Message Queues: RabbitMQ, Kafka, AWS SQS
+Testing: Jest, Mocha, Pytest
+
+CERTIFICATIONS
+• AWS Certified Solutions Architect - Professional (2023)
+• Kubernetes Administrator (CKA) (2022)
+• AWS Certified Developer - Associate (2021)
+
+ACHIEVEMENTS
+• Reduced infrastructure costs by 35% through optimization
+• Improved system uptime from 99.5% to 99.95%
+• Published 3 technical blog posts on system design
+• Speaker at Node.js Conference 2023

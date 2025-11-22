@@ -1,0 +1,74 @@
+BACKEND DEVELOPER
+Tech Innovations Corp.
+Location: Remote (US-based)
+Type: Full-time
+
+ABOUT THE ROLE
+
+We are seeking an experienced Backend Developer to join our growing engineering team. You will be responsible for designing, developing, and maintaining scalable backend systems that power our SaaS platform serving thousands of customers.
+
+RESPONSIBILITIES
+
+• Design and implement robust, scalable backend APIs using Node.js
+• Build and maintain microservices architecture
+• Work with PostgreSQL and other databases to ensure data integrity and performance
+• Implement authentication, authorization, and security best practices
+• Collaborate with frontend developers to integrate APIs
+• Write clean, maintainable, and well-tested code
+• Participate in code reviews and mentor junior developers
+• Deploy and monitor applications in cloud environments (AWS preferred)
+• Optimize application performance and troubleshoot issues
+• Contribute to technical documentation and architecture decisions
+
+REQUIRED QUALIFICATIONS
+
+• 4+ years of professional experience in backend development
+• Strong proficiency in Node.js and Express.js
+• Experience with TypeScript
+• Solid understanding of RESTful API design principles
+• Experience with PostgreSQL or other relational databases
+• Knowledge of authentication mechanisms (JWT, OAuth)
+• Experience with Git version control
+• Strong problem-solving and debugging skills
+• Excellent communication and teamwork abilities
+• Bachelor's degree in Computer Science or related field (or equivalent experience)
+
+PREFERRED QUALIFICATIONS
+
+• Experience with microservices architecture
+• Knowledge of Kubernetes and container orchestration
+• Experience with AWS services (EC2, S3, Lambda, RDS)
+• Familiarity with CI/CD pipelines
+• Experience with Redis or other caching solutions
+• Knowledge of GraphQL
+• Experience leading or mentoring development teams
+• Contributions to open-source projects
+
+TECHNICAL STACK
+
+• Backend: Node.js, TypeScript, Express.js
+• Databases: PostgreSQL, Redis
+• Cloud: AWS (EC2, RDS, S3, Lambda)
+• DevOps: Docker, Kubernetes, Jenkins, GitHub Actions
+• Monitoring: DataDog, CloudWatch
+• Testing: Jest, Mocha
+
+WHAT WE OFFER
+
+• Competitive salary ($120k - $160k based on experience)
+• Comprehensive health, dental, and vision insurance
+• 401(k) with company match
+• Flexible work schedule and remote work options
+• Professional development budget
+• Latest tech equipment
+• Collaborative and innovative team culture
+
+ABOUT US
+
+Tech Innovations Corp. is a fast-growing SaaS company revolutionizing the way businesses manage their operations. Our platform is used by over 5,000 companies worldwide, and we're backed by leading venture capital firms.
+
+TO APPLY
+
+Please submit your resume and a brief cover letter explaining why you're interested in this role.
+
+We are an equal opportunity employer and value diversity at our company.

@@ -1,0 +1,58 @@
+MICHAEL RODRIGUEZ
+Full Stack Developer
+michael.rodriguez@email.com | (555) 456-7890 | Austin, TX
+
+SUMMARY
+Creative full stack developer with 3 years of experience building modern web applications. Strong focus on user experience and clean code. Quick learner with a passion for new technologies.
+
+EXPERIENCE
+
+Full Stack Developer | WebApps Co. | Aug 2021 - Present
+• Develop features for company's main product using React and Node.js
+• Build responsive UIs with React, Material-UI, and CSS
+• Create RESTful APIs with Express.js and MongoDB
+• Implement user authentication and authorization
+• Write automated tests using Jest and React Testing Library
+• Participate in daily standups and sprint planning
+
+Junior Developer | Digital Agency | Jun 2020 - Jul 2021
+• Built client websites using React, WordPress, and PHP
+• Integrated payment systems (Stripe, Square)
+• Optimized website performance and SEO
+• Collaborated with designers and project managers
+• Maintained and updated existing client projects
+
+Intern Developer | Tech Startup | Jan 2020 - May 2020
+• Assisted in developing mobile app features using React Native
+• Fixed bugs and improved code quality
+• Learned Agile development methodologies
+• Participated in code reviews
+
+EDUCATION
+
+Bachelor of Arts in Computer Science
+University of Texas at Austin | 2016 - 2020
+Minor in Business Administration
+
+SKILLS
+
+Frontend: React.js, JavaScript, HTML, CSS, Material-UI, Bootstrap
+Backend: Node.js, Express.js, PHP
+Databases: MongoDB, MySQL
+Tools: Git, VS Code, Figma, Postman
+Other: REST APIs, Agile, Responsive Design
+
+PROJECTS
+
+Personal Portfolio Website
+• Built with React and deployed on Netlify
+• Showcases projects and technical skills
+
+Task Management App
+• Full stack app with React frontend and Node.js backend
+• Features user authentication and real-time updates
+
+INTERESTS
+• Open source contribution
+• Tech meetups and hackathons
+• Photography and design

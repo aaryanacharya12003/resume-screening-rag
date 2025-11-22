@@ -1,0 +1,65 @@
+JOHN DOE
+Senior Full Stack Developer
+Email: john.doe@email.com | Phone: (555) 123-4567
+Location: New York, NY | LinkedIn: linkedin.com/in/johndoe
+
+SUMMARY
+Experienced Full Stack Developer with 5+ years of expertise in building scalable web applications using React, Node.js, and modern cloud technologies. Proven track record of leading development teams and delivering high-quality software solutions.
+
+EXPERIENCE
+
+Senior Full Stack Developer | Tech Solutions Inc. | Jan 2021 - Present
+• Led a team of 5 developers in building a microservices-based e-commerce platform
+• Architected and implemented RESTful APIs using Node.js and Express.js
+• Developed responsive front-end applications using React.js, Redux, and TypeScript
+• Implemented CI/CD pipelines using Jenkins and Docker
+• Improved application performance by 40% through code optimization and caching strategies
+• Mentored junior developers and conducted code reviews
+
+Full Stack Developer | Digital Innovations LLC | Jun 2019 - Dec 2020
+• Built and maintained web applications using React, Node.js, and PostgreSQL
+• Integrated third-party APIs and payment gateways (Stripe, PayPal)
+• Implemented authentication and authorization using JWT and OAuth 2.0
+• Collaborated with UX designers to create intuitive user interfaces
+• Participated in Agile/Scrum development processes
+
+Junior Developer | StartUp Co. | Jan 2018 - May 2019
+• Developed features for company's main product using JavaScript and Python
+• Fixed bugs and improved code quality through unit testing
+• Worked with MongoDB and MySQL databases
+• Assisted in deployment and server maintenance
+
+EDUCATION
+
+Bachelor of Science in Computer Science
+State University of New York (SUNY) Buffalo | 2014 - 2018
+GPA: 3.7/4.0
+
+TECHNICAL SKILLS
+
+Languages: JavaScript, TypeScript, Python, SQL, HTML, CSS
+Frontend: React.js, Redux, Next.js, Vue.js, Tailwind CSS
+Backend: Node.js, Express.js, NestJS, Django, Flask
+Databases: PostgreSQL, MongoDB, MySQL, Redis
+Cloud & DevOps: AWS (EC2, S3, Lambda), Docker, Jenkins, Git
+Tools: VS Code, Postman, Jira, Figma
+
+CERTIFICATIONS
+• AWS Certified Developer - Associate (2022)
+• MongoDB Certified Developer (2021)
+
+PROJECTS
+
+E-Commerce Platform
+• Built a full-stack e-commerce application with React and Node.js
+• Implemented shopping cart, payment processing, and order management
+• Deployed on AWS with auto-scaling capabilities
+
+Real-Time Chat Application
+• Developed a real-time messaging app using Socket.io and React
+• Implemented user authentication and message encryption
+• Supported 1000+ concurrent users
+
+LANGUAGES
+• English (Native)
+• Spanish (Conversational)

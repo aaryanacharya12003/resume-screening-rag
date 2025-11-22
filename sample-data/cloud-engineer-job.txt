@@ -1,0 +1,183 @@
+CLOUD ENGINEER / DEVOPS ENGINEER
+Enterprise Tech Corp.
+Location: Remote (US-based) or Seattle, WA
+Type: Full-time
+Salary: $140,000 - $180,000 + Benefits
+
+ABOUT THE ROLE
+
+We are seeking an experienced Cloud Engineer to join our Infrastructure team. You will be responsible for designing, implementing, and maintaining our cloud infrastructure on AWS. This role requires deep expertise in Kubernetes, Infrastructure as Code, and modern DevOps practices.
+
+RESPONSIBILITIES
+
+Cloud Infrastructure:
+• Design and implement scalable, highly available AWS infrastructure
+• Manage and optimize Kubernetes clusters (EKS)
+• Implement Infrastructure as Code using Terraform
+• Ensure security best practices across all cloud resources
+• Monitor and optimize cloud costs
+
+DevOps & Automation:
+• Build and maintain CI/CD pipelines
+• Automate deployment processes and infrastructure provisioning
+• Implement GitOps workflows
+• Create and maintain monitoring and alerting systems
+• Develop automation scripts and tools
+
+System Reliability:
+• Ensure 99.9%+ uptime for production systems
+• Implement disaster recovery and backup strategies
+• Troubleshoot and resolve infrastructure issues
+• Participate in on-call rotation
+• Conduct post-incident reviews and implement improvements
+
+Collaboration:
+• Work with development teams to optimize application deployment
+• Document infrastructure architecture and procedures
+• Mentor junior engineers
+• Participate in architecture and design reviews
+• Stay current with cloud technologies and best practices
+
+REQUIRED QUALIFICATIONS
+
+Experience:
+• 5+ years of experience in cloud engineering or DevOps
+• 3+ years of hands-on experience with AWS
+• 2+ years of experience with Kubernetes in production
+• Strong experience with Infrastructure as Code (Terraform required)
+• Proven track record of managing production systems at scale
+
+Technical Skills:
+• Expert-level AWS knowledge (EC2, S3, RDS, Lambda, EKS, VPC, IAM)
+• Strong Kubernetes experience (deployment, scaling, troubleshooting)
+• Proficiency with Terraform or CloudFormation
+• Experience with CI/CD tools (Jenkins, GitLab CI, GitHub Actions)
+• Strong scripting skills (Python, Bash, or similar)
+• Experience with monitoring tools (Prometheus, Grafana, CloudWatch)
+• Understanding of networking concepts (VPC, subnets, load balancers)
+
+Soft Skills:
+• Excellent problem-solving and troubleshooting abilities
+• Strong communication skills (written and verbal)
+• Ability to work independently and in a team
+• Experience with Agile methodologies
+• Strong documentation skills
+
+Education:
+• Bachelor's degree in Computer Science, Engineering, or related field
+• Or equivalent practical experience
+
+PREFERRED QUALIFICATIONS
+
+Certifications:
+• AWS Certified Solutions Architect - Professional
+• AWS Certified DevOps Engineer - Professional
+• Certified Kubernetes Administrator (CKA)
+• HashiCorp Certified: Terraform Associate
+
+Additional Experience:
+• Experience with multi-cloud environments (Azure, GCP)
+• Experience with service mesh (Istio, Linkerd)
+• Knowledge of security best practices and compliance (SOC2, HIPAA)
+• Experience with GitOps tools (ArgoCD, Flux)
+• Familiarity with observability tools (DataDog, New Relic)
+• Experience with database management (PostgreSQL, MongoDB, Redis)
+• Container security experience
+• Experience leading infrastructure projects
+• Open-source contributions
+
+TECHNICAL STACK
+
+Cloud & Infrastructure:
+• AWS (primary), Azure (secondary)
+• Kubernetes (EKS)
+• Terraform
+• Docker
+
+CI/CD & Automation:
+• GitHub Actions
+• Jenkins
+• ArgoCD
+• Ansible
+
+Monitoring & Logging:
+• Prometheus & Grafana
+• ELK Stack
+• CloudWatch
+• DataDog
+
+Databases:
+• PostgreSQL
+• MongoDB
+• Redis
+• DynamoDB
+
+WHAT WE OFFER
+
+Compensation & Benefits:
+• Competitive salary ($140K - $180K based on experience)
+• Annual performance bonus (10-15%)
+• Comprehensive health, dental, and vision insurance
+• 401(k) with 6% company match
+• Stock options
+
+Work-Life Balance:
+• Flexible work schedule
+• Remote work options (or hybrid in Seattle office)
+• Unlimited PTO policy
+• Paid parental leave
+
+Professional Development:
+• $5,000 annual learning budget
+• Conference attendance (AWS re:Invent, KubeCon, etc.)
+• Certification reimbursement
+• Internal training programs
+• Mentorship opportunities
+
+Equipment & Tools:
+• MacBook Pro or Linux workstation
+• Home office stipend ($1,500)
+• Latest development tools and software
+
+Culture:
+• Collaborative and innovative team environment
+• Regular team building events
+• Diversity and inclusion initiatives
+• Work on cutting-edge technologies
+• Impact on company-wide infrastructure
+
+ABOUT US
+
+Enterprise Tech Corp. is a fast-growing SaaS company serving 10,000+ enterprise customers worldwide. Our platform processes 100M+ transactions daily and maintains 99.99% uptime. We're backed by leading venture capital firms and are scaling rapidly.
+
+Our Infrastructure team manages:
+• 500+ AWS accounts
+• 50+ Kubernetes clusters
+• 1000+ microservices
+• Multi-region deployment across 5 AWS regions
+• Petabytes of data
+
+INTERVIEW PROCESS
+
+1. Initial phone screen (30 minutes)
+2. Technical assessment (take-home or live coding)
+3. Technical deep-dive interview (90 minutes)
+4. System design interview (60 minutes)
+5. Team fit and culture interview (45 minutes)
+6. Final interview with Engineering Director (30 minutes)
+
+Total process: 2-3 weeks
+
+TO APPLY
+
+Please submit:
+• Resume
+• Cover letter (optional but encouraged)
+• GitHub profile or portfolio (if available)
+• Links to any technical blog posts or presentations
+
+We are an equal opportunity employer and value diversity. We do not discriminate on the basis of race, religion, color, national origin, gender, sexual orientation, age, marital status, veteran status, or disability status.
+
+KEYWORDS
+
+Cloud Engineer, DevOps Engineer, AWS, Kubernetes, Terraform, Infrastructure as Code, CI/CD, Docker, EKS, Site Reliability Engineer, SRE, Platform Engineer, Infrastructure Engineer

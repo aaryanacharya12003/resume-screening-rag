@@ -1,0 +1,142 @@
+ALEX KUMAR
+Cloud Engineer | DevOps Specialist
+Email: alex.kumar@email.com | Phone: (555) 234-5678
+Location: Seattle, WA | LinkedIn: linkedin.com/in/alexkumar
+GitHub: github.com/alexkumar
+
+PROFESSIONAL SUMMARY
+Results-driven Cloud Engineer with 6+ years of experience designing, implementing, and managing cloud infrastructure on AWS, Azure, and GCP. Expert in Kubernetes, Docker, Terraform, and CI/CD pipelines. Proven track record of reducing infrastructure costs by 40% while improving system reliability and scalability.
+
+PROFESSIONAL EXPERIENCE
+
+Senior Cloud Engineer | TechCloud Solutions | Jan 2022 - Present
+• Architected and deployed multi-region AWS infrastructure serving 5M+ users
+• Implemented Kubernetes clusters using EKS with auto-scaling and load balancing
+• Reduced infrastructure costs by 40% through resource optimization and reserved instances
+• Built CI/CD pipelines using Jenkins, GitLab CI, and GitHub Actions
+• Managed Infrastructure as Code using Terraform and CloudFormation
+• Implemented monitoring and alerting using Prometheus, Grafana, and CloudWatch
+• Led migration of monolithic applications to microservices architecture
+• Achieved 99.99% uptime SLA through robust disaster recovery planning
+
+Cloud DevOps Engineer | DataFlow Inc. | Mar 2020 - Dec 2021
+• Designed and maintained AWS infrastructure (EC2, S3, RDS, Lambda, ECS)
+• Implemented container orchestration using Kubernetes and Docker Swarm
+• Automated deployment processes reducing deployment time by 70%
+• Set up centralized logging using ELK stack (Elasticsearch, Logstash, Kibana)
+• Configured VPC, security groups, IAM roles, and network architecture
+• Implemented blue-green and canary deployment strategies
+• Managed databases: PostgreSQL, MySQL, MongoDB, Redis, DynamoDB
+
+DevOps Engineer | StartupHub | Jun 2018 - Feb 2020
+• Built and maintained CI/CD pipelines for 20+ microservices
+• Containerized applications using Docker and deployed to Kubernetes
+• Automated infrastructure provisioning using Terraform and Ansible
+• Implemented backup and disaster recovery solutions
+• Configured monitoring dashboards and alerting systems
+• Reduced deployment failures by 60% through automated testing
+
+EDUCATION
+
+Bachelor of Science in Computer Engineering
+University of Washington | 2014 - 2018
+GPA: 3.8/4.0
+
+CERTIFICATIONS
+
+• AWS Certified Solutions Architect - Professional (2023)
+• AWS Certified DevOps Engineer - Professional (2022)
+• Certified Kubernetes Administrator (CKA) (2022)
+• HashiCorp Certified: Terraform Associate (2021)
+• AWS Certified Solutions Architect - Associate (2020)
+• Microsoft Azure Administrator Associate (2021)
+
+TECHNICAL SKILLS
+
+Cloud Platforms:
+• AWS: EC2, S3, RDS, Lambda, ECS, EKS, CloudFormation, CloudWatch, Route53, VPC
+• Azure: Virtual Machines, App Service, AKS, Azure DevOps, Storage
+• Google Cloud Platform: Compute Engine, GKE, Cloud Storage, Cloud Functions
+
+Container & Orchestration:
+• Kubernetes (EKS, AKS, GKE, self-managed)
+• Docker, Docker Compose, Docker Swarm
+• Helm Charts, Kustomize
+
+Infrastructure as Code:
+• Terraform (Expert level)
+• CloudFormation
+• Ansible
+• Pulumi
+
+CI/CD Tools:
+• Jenkins, GitLab CI/CD, GitHub Actions
+• CircleCI, Travis CI
+• ArgoCD, Flux
+
+Monitoring & Logging:
+• Prometheus, Grafana
+• ELK Stack (Elasticsearch, Logstash, Kibana)
+• CloudWatch, DataDog, New Relic
+• Splunk
+
+Scripting & Programming:
+• Python, Bash, PowerShell
+• Go (basic)
+• YAML, JSON
+
+Databases:
+• PostgreSQL, MySQL, MongoDB
+• Redis, DynamoDB, Cassandra
+
+Version Control & Collaboration:
+• Git, GitHub, GitLab, Bitbucket
+• Jira, Confluence
+
+Security:
+• AWS IAM, Security Groups, NACLs
+• SSL/TLS certificates
+• Secrets management (AWS Secrets Manager, HashiCorp Vault)
+• Security scanning (Trivy, Snyk)
+
+NOTABLE PROJECTS
+
+Multi-Region High Availability Platform
+• Designed and implemented multi-region AWS architecture across 3 regions
+• Implemented automatic failover and disaster recovery
+• Reduced RTO from 4 hours to 15 minutes
+• Technologies: AWS, Terraform, Kubernetes, Route53, RDS Multi-AZ
+
+Kubernetes Migration Project
+• Led migration of 50+ applications from EC2 to Kubernetes (EKS)
+• Implemented GitOps workflow using ArgoCD
+• Reduced deployment time from 2 hours to 10 minutes
+• Achieved 99.95% uptime during migration
+
+Cost Optimization Initiative
+• Analyzed and optimized AWS spending across 200+ accounts
+• Implemented auto-scaling policies and right-sizing recommendations
+• Reduced monthly cloud costs by $150K (40% reduction)
+• Technologies: AWS Cost Explorer, CloudHealth, custom Python scripts
+
+ACHIEVEMENTS
+
+• Reduced infrastructure costs by 40% through optimization and automation
+• Improved deployment frequency from weekly to multiple times per day
+• Achieved 99.99% uptime for critical production systems
+• Led team of 4 junior DevOps engineers
+• Speaker at AWS re:Invent 2023 on "Kubernetes Cost Optimization"
+• Published 5 technical blog posts on cloud architecture
+
+PROFESSIONAL DEVELOPMENT
+
+• AWS re:Invent Conference (2022, 2023)
+• KubeCon + CloudNativeCon (2022, 2023)
+• HashiConf (2022)
+• Regular contributor to open-source Kubernetes projects
+
+LANGUAGES
+
+• English (Native)
+• Hindi (Fluent)
+• Spanish (Conversational)
