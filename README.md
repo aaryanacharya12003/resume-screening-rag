@@ -449,7 +449,7 @@ Built for JobTalk.ai Backend Developer Assessment
 
 ## 📞 Support
 
-For questions or issues, please contact: anshul@jobtalk.ai
+For questions or issues, please contact: aaryanacharya12003@gmail.com
 
 ---
 
