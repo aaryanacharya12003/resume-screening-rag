@@ -87,6 +87,11 @@ router.post(
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) throw new HttpError(401, 'Wrong email or password');
     if (user.suspended) throw new HttpError(403, 'Your account is suspended');
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+    // Unverified account signing in (code expired, lost, or never sent): send a fresh code, so the
+    // verify page they land on has one waiting. Skipped if one went out in the last minute.
+    if (!user.emailVerifiedAt && (await resendWaitSeconds(user.id)) === 0) {
+      await issueVerificationCode(user).catch((e) => console.error('Verification email failed:', e?.message || e));
+    }
     setAuthCookie(res, signToken(user.id));
     res.json({ user: publicUser(user) });
   }),

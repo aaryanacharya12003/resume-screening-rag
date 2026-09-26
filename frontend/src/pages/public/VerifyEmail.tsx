@@ -20,6 +20,20 @@ export default function VerifyEmail() {
   // The sign-up just sent a code, so the first resend is available after the cooldown.
   const [wait, setWait] = useState(RESEND_SECONDS);
 
+  // On arrival, make sure a code is waiting: the server sends one unless it sent one in the last
+  // minute (then it answers with how long to wait, which drives the resend countdown).
+  const unverified = Boolean(me && !me.user.emailVerified);
+  useEffect(() => {
+    if (!unverified) return;
+    api
+      .post('/auth/resend-code')
+      .then(() => setWait(RESEND_SECONDS))
+      .catch((e) => {
+        const secs = Number(errMsg(e).match(/wait (\d+) seconds/)?.[1]);
+        setWait(Number.isFinite(secs) ? secs : 0);
+      });
+  }, [unverified]);
+
   useEffect(() => {
     if (wait <= 0) return;
     const t = window.setTimeout(() => setWait((w) => w - 1), 1000);
