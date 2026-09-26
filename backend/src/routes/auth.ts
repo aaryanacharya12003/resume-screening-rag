@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { z } from 'zod';
 import { prisma } from '../config/db';
-import { AUTH_COOKIE, readAuthToken, requireAuth, revokeToken, setAuthCookie, signToken } from '../middleware/auth';
+import { AUTH_COOKIE, optionalAuth, readAuthToken, requireAuth, revokeToken, setAuthCookie, signToken } from '../middleware/auth';
 import * as limits from '../lib/rateLimit';
 import { getEntitlement, getUsage, seatInfo } from '../lib/entitlements';
 import { ah, HttpError } from '../lib/http';
@@ -210,13 +210,29 @@ router.get(
   '/me',
   requireAuth,
   ah(async (req, res) => {
-    const user = req.user!;
+    res.json(await accountView(req.user!));
+  }),
+);
+
+/**
+ * The app's "who is signed in?" check: always 200, with the same body as /me or null when signed
+ * out, so a logged-out visit doesn't log a failed request in the browser console.
+ */
+router.get(
+  '/session',
+  optionalAuth,
+  ah(async (req, res) => {
+    res.json({ me: req.user ? await accountView(req.user) : null });
+  }),
+);
+
+async function accountView(user: NonNullable<Express.Request['user']>) {
     const [ent, usage, org] = await Promise.all([
       getEntitlement(user),
       getUsage(user),
       user.orgId ? prisma.organization.findUnique({ where: { id: user.orgId } }) : null,
     ]);
-    res.json({
+    return {
       user: publicUser(user),
       org: org && { id: org.id, name: org.name, slug: org.slug, seats: await seatInfo(org.id) },
       plan: {
@@ -228,9 +244,8 @@ router.get(
         periodEnd: ent.periodEnd,
       },
       usage,
-    });
-  }),
-);
+    };
+}
 
 router.get(
   '/invite/:token',

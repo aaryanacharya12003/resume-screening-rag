@@ -16,8 +16,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const q = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
+      // /auth/session answers 200 with null when signed out (no failed request in the console).
       try {
-        return (await api.get<Me>('/auth/me')).data;
+        return (await api.get<{ me: Me | null }>('/auth/session')).data.me;
       } catch {
         return null;
       }

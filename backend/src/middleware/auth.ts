@@ -55,7 +55,7 @@ function readToken(req: Request): string | undefined {
   return req.cookies?.[AUTH_COOKIE];
 }
 
-const UNVERIFIED_ALLOWED = new Set(['/api/auth/me', '/api/auth/verify-email', '/api/auth/resend-code', '/api/auth/logout']);
+const UNVERIFIED_ALLOWED = new Set(['/api/auth/me', '/api/auth/session', '/api/auth/verify-email', '/api/auth/resend-code', '/api/auth/logout']);
 
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
@@ -83,6 +83,15 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
   } catch (e) {
     next(e instanceof HttpError ? e : new HttpError(401, 'Session expired, please sign in again'));
   }
+}
+
+/** Like requireAuth, but a missing or invalid session just leaves req.user unset (no error). */
+export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  if (!readToken(req)) return next();
+  requireAuth(req, res, (err?: unknown) => {
+    if (err) req.user = undefined;
+    next();
+  });
 }
 
 export const requireRole =
