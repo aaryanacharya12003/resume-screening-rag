@@ -1,6 +1,8 @@
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 
+type CreateParams = OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
+
 dotenv.config();
 
 export const GROQ_CHAT_MODEL = 'openai/gpt-oss-120b';
@@ -16,6 +18,37 @@ if (!keys.length) console.warn('⚠ No Groq API key configured (GROQ_API_KEY / G
 const clients = keys.map(
   (apiKey) => new OpenAI({ apiKey, baseURL: 'https://api.groq.com/openai/v1', maxRetries: 0 }),
 );
+
+// Fallback: when Groq fails a request twice (rate limits, rejected keys, outages), the request
+// goes to OpenRouter instead. Same model by default, so scores stay comparable.
+const OPENROUTER_AFTER_FAILURES = 2;
+const openrouter = process.env.OPENROUTER_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENROUTER_API_KEY,
+      baseURL: 'https://openrouter.ai/api/v1',
+      maxRetries: 0,
+      timeout: 120_000,
+      defaultHeaders: { 'HTTP-Referer': process.env.FRONTEND_URL || 'https://resumint-two.vercel.app', 'X-Title': 'Resumint' },
+    })
+  : null;
+export const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'openai/gpt-oss-120b';
+export const openRouterEnabled = Boolean(openrouter);
+
+/** Same request on OpenRouter. Groq's flat reasoning_effort becomes OpenRouter's reasoning object. */
+async function viaOpenRouter(params: CreateParams, groqError: unknown) {
+  const { reasoning_effort, ...rest } = params as CreateParams & { reasoning_effort?: string };
+  try {
+    return await openrouter!.chat.completions.create({
+      ...rest,
+      model: OPENROUTER_MODEL,
+      ...(reasoning_effort ? ({ reasoning: { effort: reasoning_effort } } as object) : {}),
+    } as CreateParams);
+  } catch (e) {
+    console.error(`  ✖ OpenRouter fallback failed too (${(e as any)?.status ?? ''}): ${String((e as any)?.message).slice(0, 120)}`);
+    // Report Groq's error when it was a rate limit: callers wait and retry on those.
+    throw (groqError as any)?.status === 429 ? groqError : e;
+  }
+}
 
 let next = 0;
 // A rate-limited key is skipped until this time instead of being hit again.
@@ -38,14 +71,17 @@ export function coolDownMs(e: any) {
   return ms > 0 ? Math.ceil(ms) : 20000;
 }
 
-type CreateParams = OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming;
 
 /**
  * Round-robin over the keys: every request starts on the next key. If a key is rate-limited
- * (or rejected), the same request moves straight on to the following key.
+ * (or rejected), the same request moves straight on to the following key. After two Groq
+ * failures on one request, it goes to OpenRouter when OPENROUTER_API_KEY is set.
  */
 async function create(params: CreateParams): Promise<OpenAI.Chat.Completions.ChatCompletion> {
-  if (!clients.length) throw new Error('No Groq API key configured');
+  if (!clients.length) {
+    if (openrouter) return viaOpenRouter(params, new Error('No Groq API key configured'));
+    throw new Error('No Groq API key configured');
+  }
   const start = next;
   next = (next + 1) % clients.length;
 
@@ -56,16 +92,24 @@ async function create(params: CreateParams): Promise<OpenAI.Chat.Completions.Cha
   const order = clients.map((_, i) => (start + i) % clients.length);
   // Every key hit its per-minute limit: wait for the first one to recover (a daily limit isn't waited out).
   const soonest = Math.min(...coolingUntil) - Date.now();
+  if (soonest > 0 && openrouter) {
+    // Waiting would burn the request's time budget; OpenRouter can answer now.
+    console.warn(`  ↪ all Groq keys cooling down, using OpenRouter`);
+    return viaOpenRouter(params, new Error('All Groq keys are cooling down'));
+  }
   if (soonest > 0 && soonest <= 60_000) {
     console.warn(`  ⏳ all Groq keys at their per-minute limit, waiting ${Math.ceil(soonest / 1000)}s`);
     await new Promise((r) => setTimeout(r, soonest + 250));
   }
   const ready = order.filter((i) => coolingUntil[i] <= Date.now());
+  let failures = 0;
   for (const i of [...ready, ...order.filter((i) => !ready.includes(i))]) {
+    if (openrouter && failures >= OPENROUTER_AFTER_FAILURES) break;
     try {
       return await clients[i].chat.completions.create(params);
     } catch (e) {
       lastError = e;
+      failures++;
       if (isRateLimit(e)) {
         coolingUntil[i] = Date.now() + coolDownMs(e);
         rateLimitError = e;
@@ -77,8 +121,18 @@ async function create(params: CreateParams): Promise<OpenAI.Chat.Completions.Cha
         console.error(`  ✖ Groq key #${i + 1} was rejected (${(e as any)?.status}); check it in backend/.env`);
         continue;
       }
-      throw e; // a real request error (bad prompt, invalid JSON output…) won't be fixed by another key
+      // Any other error (provider outage, a model output Groq refused such as invalid JSON):
+      // another Groq key won't help, OpenRouter might.
+      if (openrouter) {
+        console.warn(`  ↪ Groq error ${(e as any)?.status ?? ''} on key #${i + 1}, using OpenRouter`);
+        return viaOpenRouter(params, e);
+      }
+      throw e;
     }
+  }
+  if (openrouter && failures > 0) {
+    console.warn(`  ↪ Groq failed ${failures} times on this request, using OpenRouter`);
+    return viaOpenRouter(params, rateLimitError ?? lastError);
   }
   throw rateLimitError ?? lastError;
 }
