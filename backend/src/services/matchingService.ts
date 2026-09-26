@@ -1,6 +1,7 @@
 import { coolDownMs, groq, GROQ_CHAT_MODEL } from '../config/groq';
 import { MatchAnalysis } from '../types';
 import { placeholderizeNumbers } from '../lib/honesty';
+import { HttpError } from '../lib/http';
 
 // Whole resume: a 2-page resume is ~8-9k chars. (This used to be 6000, which silently cut off
 // education, certifications and projects and skewed scores.)
@@ -111,6 +112,16 @@ Score "ats" only on how reliably an applicant tracking system can parse the text
       };
     } catch (error) {
       console.error('Error analyzing match:', error);
+      // The AI provider is out of capacity (per-minute or daily limit): say so, with a rough wait,
+      // instead of a generic failure. Nothing is saved, so the user's scan allowance is untouched.
+      if ((error as { status?: number })?.status === 429) {
+        const mins = Math.max(1, Math.ceil(coolDownMs(error) / 60000));
+        throw new HttpError(
+          503,
+          `Our AI reviewer is at capacity right now. Please try again in about ${mins} minute${mins === 1 ? '' : 's'}; your scan wasn't used.`,
+          'AI_BUSY',
+        );
+      }
       throw new Error('Failed to analyze match');
     }
   }
