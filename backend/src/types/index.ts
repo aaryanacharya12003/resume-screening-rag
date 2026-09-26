@@ -31,9 +31,23 @@ export interface VectorMetadata {
   [key: string]: string; // Index signature for Pinecone compatibility
 }
 
+export interface ScanIssue {
+  severity: 'high' | 'medium' | 'low';
+  title: string;
+  detail: string;
+  check: string;
+}
+
 export interface MatchAnalysis {
   score: number;
+  candidateName: string;
+  targetRole: string;
+  categories: { ats: number; impact: number; keywords: number; readability: number };
   strengths: string[];
   gaps: string[];
+  issues: ScanIssue[];
+  keywords: { have: string[]; missing: string[] };
+  rewrites: Array<{ before: string; after: string; why: string }>;
   insights: string;
+  hasJobDescription: boolean;
 }

@@ -1,456 +1,103 @@
-# 🤖 AI-Powered Resume Screening Tool
+# Resumint: AI resume checker & screening SaaS
 
-> A production-ready RAG (Retrieval-Augmented Generation) system for intelligent resume analysis and candidate Q&A
+Recruiter-grade resume analysis for job seekers, and AI bulk screening for hiring teams. Multi-tenant, with **User**, **Org Admin** and **Super Admin** panels, Razorpay billing, and a RAG engine (Pinecone + Hugging Face embeddings + Groq LLM).
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)](https://openai.com/)
-[![Pinecone](https://img.shields.io/badge/Pinecone-000000?style=flat&logo=pinecone&logoColor=white)](https://www.pinecone.io/)
+## Plans
 
-## � Tablre of Contents
+| Plan | Price | What you get |
+|---|---|---|
+| Free | ₹0 | 1 scan: score, category meters, top 3 issues |
+| Pro | ₹99 one-time | Unlimited scans, full 30+ check report, JD matching, bullet rewrites, AI recruiter chat, version compare |
+| Team | ₹2,999/mo or ₹29,990/yr | 5 recruiter seats (+₹499/seat), jobs, bulk screening (500 resumes/mo) with ranking, CSV export |
+| Enterprise | Custom | Unlimited seats & volume, SSO, API, white-label, SLA (contact-sales form) |
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [RAG Architecture](#rag-architecture)
-- [Quick Start](#quick-start)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
+Prices, limits and pricing-card copy live in the `Plan` table and are editable by the Super Admin (**Plans & pricing**). Limits are enforced server-side.
 
-## 🎯 Overview
+## Roles
 
-This application revolutionizes the resume screening process by combining AI-powered analysis with semantic search capabilities. Built with a true RAG architecture, it provides accurate, context-aware insights about candidates by intelligently retrieving relevant information from resumes and generating precise answers.
+- **User**: job seeker, or a recruiter seat inside an organization (inherits the org's plan).
+- **Org Admin** (`/org`): team & invites, seats, jobs, bulk screening, CSV export, team billing.
+- **Super Admin** (`/admin`): KPIs (MRR, revenue, scans, sign-ups), users, organizations, plan editor, payments & refunds, enterprise leads, audit log, complimentary plan grants.
 
-### Why RAG?
+## Stack
 
-Traditional approaches send entire resumes to LLMs, which is:
-- ❌ Expensive (high token usage)
-- ❌ Slow (processing large documents)
-- ❌ Less accurate (information gets lost in context)
+- **Backend**: Express + TypeScript, Prisma + PostgreSQL (Supabase), JWT in an httpOnly cookie, Razorpay orders + signature verification + webhook.
+- **AI**: pdf-parse → section chunking → HF `bge-large-en-v1.5` embeddings → Pinecone (1024-d, cosine) for chat; Groq `gpt-oss-120b` for the scan report and RAG answers.
+- **Frontend**: React 18 + Vite + React Router + TanStack Query + Recharts, styled with the Resumint theme (Fraunces / Plus Jakarta Sans / Kalam; navy, indigo, mint and raspberry with hard shadows). `resume test/` holds the original static design the layout started from.
 
-Our RAG approach:
-- ✅ Cost-effective (only relevant chunks processed)
-- ✅ Fast (semantic search in milliseconds)
-- ✅ Accurate (focused context for each question)
-- ✅ Scalable (handles thousands of resumes)
-
-## ✨ Features
-
-### 📤 Smart Document Upload
-- Support for PDF and TXT formats
-- Automatic text extraction and parsing
-- Intelligent document chunking by sections
-- Real-time processing feedback
-
-### 🎯 AI-Powered Match Analysis
-- **Match Score (0-100%)**: Accurate scoring based on job requirements
-- **Strengths Identification**: Highlights candidate's best qualifications
-- **Gap Analysis**: Identifies missing skills or experience
-- **Key Insights**: AI-generated summary of candidate fit
-
-### 💬 RAG-Powered Chat Interface
-- Ask natural language questions about candidates
-- Context-aware responses with source attribution
-- Semantic search retrieves relevant resume sections
-- Distinguishes between different role types (DevOps vs Backend, etc.)
-
-### 🎨 Professional UI
-- Modern, responsive design
-- Real-time loading states
-- Gradient animations and smooth transitions
-- Mobile-friendly interface
-
-## 🛠️ Tech Stack
-
-### Backend
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **Node.js** | Runtime environment | 18+ |
-| **TypeScript** | Type safety | 5.x |
-| **Express.js** | Web framework | 4.x |
-| **OpenAI API** | Embeddings & LLM | Latest |
-| **Pinecone** | Vector database | 2.x |
-| **pdf-parse** | PDF extraction | 1.x |
-
-### Frontend
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **React** | UI framework | 18.x |
-| **TypeScript** | Type safety | 5.x |
-| **Vite** | Build tool | 5.x |
-| **Tailwind CSS** | Styling | 3.x |
-| **Axios** | HTTP client | 1.x |
-
-## 🏗️ RAG Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     UPLOAD FLOW                             │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  Resume PDF/TXT                                             │
-│       ↓                                                     │
-│  Extract Text (pdf-parse)                                   │
-│       ↓                                                     │
-│  Chunk by Sections (Experience, Education, Skills, etc.)    │
-│       ↓                                                     │
-│  Generate Embeddings (OpenAI text-embedding-3-small)        │
-│       ↓                                                     │
-│  Store Vectors in Pinecone (1024 dimensions)                │
-│       ↓                                                     │
-│  Analyze Match with LLM (GPT-3.5-turbo)                     │
-│       ↓                                                     │
-│  Return Score, Strengths, Gaps, Insights                    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────┐
-│                     CHAT FLOW (RAG)                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  User Question: "Does candidate have React experience?"     │
-│       ↓                                                     │
-│  Generate Question Embedding                                │
-│       ↓                                                     │
-│  Semantic Search in Pinecone (cosine similarity)            │
-│       ↓                                                     │
-│  Retrieve Top 4 Relevant Chunks                             │
-│       ↓                                                     │
-│  Build Augmented Prompt: [Context] + [Question]             │
-│       ↓                                                     │
-│  LLM Generates Answer (GPT-3.5-turbo)                       │
-│       ↓                                                     │
-│  Return Answer + Sources                                    │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Key Components
-
-1. **Document Processing**: Extracts text and chunks into semantic sections
-2. **Embedding Generation**: Converts text to 1024-dimensional vectors
-3. **Vector Storage**: Stores embeddings in Pinecone with metadata
-4. **Semantic Search**: Finds relevant chunks using cosine similarity
-5. **Context Augmentation**: Combines retrieved chunks with user question
-6. **Answer Generation**: LLM generates accurate, context-aware responses
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Node.js 18 or higher
-- npm or yarn
-- OpenAI API key (OpenRouter)
-- Pinecone account (free tier available)
-
-### 1. Clone Repository
+## Run locally
 
 ```bash
-git clone https://github.com/yourusername/resume-screening-rag.git
-cd resume-screening-rag
+cd backend && npm install && cp .env.example .env   # fill in keys
+npx prisma migrate deploy && npx prisma db seed      # tables, 4 plans, super admin
+npm run dev                                          # http://localhost:3001
+
+cd ../frontend && npm install && npm run dev         # http://localhost:5173 (proxies /api)
 ```
 
-### 2. Setup Pinecone
+- The super admin is created from `SUPER_ADMIN_EMAIL` / `SUPER_ADMIN_PASSWORD` by the seed.
+- No Postgres handy? `npm run dev:db` starts a local PGlite Postgres on port 5433 (see `.env.example`).
+- Without Razorpay keys, checkout runs in a simulated dev mode (never in production). With test keys, use Razorpay's test cards/UPI.
+- Webhook (optional but recommended): point `https://<api>/api/billing/webhook` at `payment.captured`, `order.paid`, `payment.failed`, and set `RAZORPAY_WEBHOOK_SECRET`.
 
-1. Sign up at [pinecone.io](https://www.pinecone.io/)
-2. Create a new index:
-   - **Name**: `resume-screening`
-   - **Dimensions**: `1024`
-   - **Metric**: `cosine`
-   - **Cloud**: AWS
-   - **Region**: `us-east-1`
+## Scoring
 
-### 3. Configure Backend
+- **No job description:** the overall score is the average of the four categories (ATS, impact, keywords, readability), so it moves exactly when they do.
+- **With a job description:** the overall score is the AI's "fit for this job" judgment; the categories are shown alongside.
+- Scoring runs at temperature 0, so re-scoring the same text gives the same result.
 
-```bash
-cd backend
-npm install
-```
+## Resume optimizer ("Boost to 90+", Pro)
 
-Create `.env` file:
-```env
-# OpenAI Configuration (OpenRouter)
-OPENAI_API_KEY=your-openrouter-api-key
+On any personal scan below 90, **Boost to 90+** edits the resume area by area, re-scores it (up to 4 passes) and saves the best version as a new scan with PDF / Word download, copy, edit & re-score, and compare.
 
-# Pinecone Configuration
-PINECONE_API_KEY=your-pinecone-api-key
-PINECONE_ENVIRONMENT=us-east-1-aws
-PINECONE_INDEX_NAME=resume-screening
+- **No category may go down.** A version is saved only if ATS, Impact, Keywords and Readability are all at least the original's. Drafts are scored twice and averaged, because AI scores of identical text vary by a few points. Each pass edits one area and copies every other line. A working copy may dip for a pass (adding results lengthens bullets) and the next pass repairs that area.
+- **Real results are the main lever.** The Boost card lists work bullets that state no outcome (`frontend/src/lib/resultGaps.ts`); the user types real results ("cut page load from 4s to 1.2s"), and only those numbers may be added. No placeholders are inserted.
 
-# Server Configuration
-PORT=3001
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-```
-
-Start backend:
-```bash
-npm run dev
-```
-
-Backend will run on: **http://localhost:3001**
-
-### 4. Setup Frontend
-
-Open new terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend will run on: **http://localhost:5173**
-
-### 5. Test the Application
-
-1. Open http://localhost:5173 in your browser
-2. Upload sample files from `sample-data/` folder:
-   - Resume: `resume1.txt`
-   - Job Description: `job-description.txt`
-3. Click "Analyze Resume"
-4. View match analysis
-5. Ask questions in the chat!
-
-## 📖 Usage
-
-### Uploading Documents
-
-1. Click "Choose File" for Resume
-2. Select a PDF or TXT file (max 10MB)
-3. Click "Choose File" for Job Description
-4. Select a PDF or TXT file
-5. Click "Analyze Resume"
-6. Wait 5-10 seconds for processing
-
-### Viewing Match Analysis
-
-The system displays:
-- **Match Score**: 0-100% based on job requirements
-- **Strengths**: Top qualifications that match the role
-- **Gaps**: Missing skills or experience
-- **Key Insights**: AI-generated summary
-
-### Asking Questions
-
-Try these example questions:
-
-**Yes/No Questions:**
-- "Does this candidate have a degree from a state university?"
-- "Do they have AWS certifications?"
-- "Can they lead a backend team?"
-
-**Specific Information:**
-- "How many years of React experience do they have?"
-- "What companies have they worked for?"
-- "What's their education background?"
-
-**Analytical Questions:**
-- "What are their main technical strengths?"
-- "What leadership experience do they have?"
-
-## 📡 API Documentation
-
-### Health Check
-
-```http
-GET /health
-```
-
-**Response:**
-```json
-{
-  "status": "ok"
-}
-```
-
-### Upload Documents
-
-```http
-POST /api/upload
-Content-Type: multipart/form-data
-```
-
-**Request:**
-- `resume`: File (PDF/TXT)
-- `jobDescription`: File (PDF/TXT)
-
-**Response:**
-```json
-{
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "matchScore": 75,
-  "strengths": [
-    "5+ years of Node.js and React experience",
-    "Strong backend architecture skills",
-    "Experience with PostgreSQL"
-  ],
-  "gaps": [
-    "No Kubernetes experience",
-    "Limited AWS cloud experience"
-  ],
-  "insights": "Strong candidate with solid full-stack experience..."
-}
-```
-
-### Ask Question
-
-```http
-POST /api/chat
-Content-Type: application/json
-```
-
-**Request:**
-```json
-{
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
-  "question": "Does this candidate have React experience?"
-}
-```
-
-**Response:**
-```json
-{
-  "answer": "Yes, the candidate has 5 years of React experience, working with Redux and TypeScript in production environments.",
-  "sources": ["experience", "skills"]
-}
-```
-
-## 🧪 Testing
-
-### Sample Data
-
-The project includes 4 sample files in `sample-data/`:
-
-1. **resume1.txt** - Full Stack Developer (5 years)
-2. **resume2.txt** - Senior Cloud Engineer (6 years)
-3. **resume3.txt** - Junior Developer (3 years)
-4. **job-description.txt** - Backend Developer role
-5. **cloud-engineer-job.txt** - Cloud Engineer role
-6. **cloud-engineer-resume.txt** - Cloud Engineer candidate
-
-### Test Scenarios
-
-See [TESTING_SCENARIOS.md](./TESTING_SCENARIOS.md) for detailed test cases.
-
-### Verifying RAG Implementation
-
-Check backend logs for:
-```
-🔮 Generating embeddings and storing in Pinecone...
-✓ Stored 8 vectors in Pinecone
-🔍 Searching vectors in Pinecone...
-✓ Found 4 matches
-```
-
-## 📁 Project Structure
-
-```
-resume-screening-rag/
-├── backend/                    # Node.js backend
-│   ├── src/
-│   │   ├── config/            # Configuration (OpenAI)
-│   │   ├── services/          # Business logic
-│   │   │   ├── pdfParser.ts   # PDF extraction & chunking
-│   │   │   ├── embeddingService.ts  # Generate embeddings
-│   │   │   ├── vectorStore.ts # Pinecone operations
-│   │   │   ├── ragService.ts  # RAG implementation
-│   │   │   └── matchingService.ts   # Match scoring
-│   │   ├── routes/            # API endpoints
-│   │   │   ├── upload.ts      # File upload
-│   │   │   └── chat.ts        # Chat Q&A
-│   │   ├── types/             # TypeScript types
-│   │   └── server.ts          # Express app
-│   ├── .env                   # Environment variables
-│   └── package.json
-│
-├── frontend/                   # React frontend
-│   ├── src/
-│   │   ├── components/        # React components
-│   │   │   ├── FileUpload.tsx
-│   │   │   ├── MatchAnalysis.tsx
-│   │   │   └── ChatInterface.tsx
-│   │   ├── services/
-│   │   │   └── api.ts         # API client
-│   │   ├── App.tsx            # Main app
-│   │   └── main.tsx           # Entry point
-│   └── package.json
-│
-├── sample-data/               # Test files
-├── ARCHITECTURE.md            # System design
-├── TESTING_SCENARIOS.md       # Test cases
-└── README.md                  # This file
-```
-
-## 🎯 Key Features Explained
-
-### 1. True RAG Implementation
-
-This is NOT just sending resumes to an LLM. It's a proper RAG system:
-
-- ✅ **Vector Embeddings**: Converts text to numerical vectors
-- ✅ **Semantic Search**: Finds relevant content by meaning, not keywords
-- ✅ **Context Retrieval**: Only sends relevant chunks to LLM
-- ✅ **Source Attribution**: Shows which resume sections were used
-
-### 2. Intelligent Chunking
-
-Documents are split intelligently:
-- **Resumes**: By sections (Experience, Education, Skills, etc.)
-- **Job Descriptions**: By requirements and paragraphs
-- **Overlap**: 50 tokens between chunks for context continuity
-
-### 3. Accurate Scoring
-
-Match scores are based on:
-- Skills match (40%)
-- Experience match (30%)
-- Education match (20%)
-- Keywords match (10%)
-
-### 4. Role-Aware Responses
-
-The AI understands role distinctions:
-- DevOps Engineer ≠ Backend Developer
-- Leading DevOps team ≠ Leading Backend Dev team
-- Infrastructure experience ≠ Application development
-
-## 🔒 Security
-
-- API keys stored in environment variables
-- File size limits (10MB)
-- Input validation and sanitization
-- CORS configuration
-- Session-based data isolation
-
-## 📊 Performance
-
-| Operation | Time | Details |
-|-----------|------|---------|
-| Upload & Analysis | 5-10s | PDF parse → Chunk → Embed → Store → Analyze |
-| Chat Response | 2-3s | Embed query → Search → Generate |
-| Vector Search | <100ms | Pinecone semantic search |
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 👥 Authors
-
-Built for JobTalk.ai Backend Developer Assessment
-
-## 📞 Support
-
-For questions or issues, please contact: aaryanacharya12003@gmail.com
-
----
-
-**Built with ❤️ using OpenAI, Pinecone, React, and Node.js**
+- **Honesty guard** (`backend/src/lib/honesty.ts`): every draft is checked in code against the original. Any skill/tool, number, or new SKILLS item the original (plus what the user confirmed) doesn't contain gets one repair round, then the draft is discarded. The same guard turns invented numbers in the report's bullet suggestions into placeholders.
+- **Missing skills are never added automatically.** The user can tick the ones they genuinely have (with a one-line detail); only those are added. Anything still missing is shown as the remaining path to 90+.
+- Every version (optimized, edited or uploaded) can be downloaded as a **designed PDF** or an **editable Word (.docx)** file (`GET /api/scans/:id/export?format=pdf|docx`, Pro). `backend/src/lib/resumeStructure.ts` has the AI organize the text: it re-joins lines broken by PDF extraction, splits role/company/location/dates, and turns certifications, education and projects into separate entries. Code then rejects the result if it invented numbers or dropped more than 15% of the words, and falls back to the rule-based parser in `resumeFormat.ts`. The structure is cached on the scan per text hash. `resumeExport.ts` lays it out: one ATS-safe column, clickable email/phone/LinkedIn/GitHub links, bold titles with right-aligned dates, and real Word bullets. The PDF automatically tightens type and spacing to fit 2 pages. Unfilled `[placeholders]` are highlighted yellow in Word.
+- **Edit & re-score** (`POST /api/scans/:id/rescore`) scores user-edited text as a new version against the same job description.
+- **Groq key rotation** (`backend/src/config/groq.ts`): requests round-robin across `GROQ_API_KEY` plus comma-separated `GROQ_API_KEYS`. A rate-limited or rejected key is skipped (cooling down for as long as Groq asks) and the request moves to the next key.
+- Runs as a background job (`POST /api/scans/:id/optimize` → poll `GET /api/scans/optimize-jobs/:jobId`), usually 2–3 minutes. Jobs are stored in the `OptimizeJob` table; on Vercel the work continues after the response via `waitUntil`.
+
+## Email (password reset & team invites)
+
+Set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `MAIL_FROM` in `backend/.env` (Gmail app password, Brevo, Resend, SES…). Until then, emails are printed to the backend log, and invite links can be copied from **Team & seats**.
+
+- Reset links are single-use, expire in 1 hour, and are stored only as a SHA-256 hash. Resetting signs the user out of every other session.
+- `/forgot-password` answers identically for unknown emails, and sends at most one email per minute per account.
+- Invites are emailed on creation. **Resend** re-sends and extends the invite by 7 days.
+
+## Database migrations
+
+Use `npx prisma migrate deploy` against Supabase. Never pass the Supabase URL as `--shadow-database-url` to `prisma migrate diff` / `migrate dev`: Prisma **wipes** the shadow database.
+
+## Deploy on Vercel
+
+One Vercel project serves both halves: the React app as static files (`frontend/dist`) and the Express API as a serverless function (`api/index.js` → `backend/dist/app.js`). `vercel.json` holds the install/build commands, rewrites (`/api/*` → the function, everything else → the SPA) and a 300 s function limit for Boost.
+
+1. Import the GitHub repo in Vercel (**Add New → Project**). Leave *Root Directory* as the repo root and *Framework Preset* as **Other**; `vercel.json` supplies the rest.
+2. **Settings → Functions**: keep **Fluid Compute** on. It allows the 300 s `maxDuration` Boost needs (without it the Hobby plan caps functions at 60 s).
+3. **Settings → Environment Variables** (Production), same names as `backend/.env.example`:
+   - `DATABASE_URL`: use Supabase's **pooled** connection string (port 6543) with `?pgbouncer=true&connection_limit=1`, since serverless opens many short connections.
+   - `JWT_SECRET` (a new long random value), `GROQ_API_KEY` / `GROQ_API_KEYS`, `HF_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`
+   - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`
+   - `FRONTEND_URL=https://<your-project>.vercel.app` (used in email links and CORS), `TRUST_PROXY=1`, `NODE_ENV=production`
+   - Leave `VITE_API_URL` unset: the app calls `/api` on the same domain.
+4. Deploy. Migrations are not run by the build; apply new ones from your machine with `npm run db:deploy --prefix backend`.
+5. In Razorpay add the webhook `https://<your-domain>/api/billing/webhook` (events `payment.captured`, `order.paid`, `payment.failed`).
+
+Limits on Vercel: request bodies are capped at 4.5 MB, so uploads are limited to 4 MB per file and bulk screening sends resumes in batches of 3. Rate limits are counted per function instance.
+
+## API overview
+
+| Area | Endpoints |
+|---|---|
+| Auth | `POST /api/auth/register · login · logout`, `GET /api/auth/me`, `GET/POST /api/auth/invite/:token[/accept]` |
+| Scans | `POST /api/scans` (multipart `resume`, optional `jobDescriptionText`), `GET /api/scans[/:id]`, `DELETE /api/scans/:id`, `POST /api/chat` |
+| Billing | `GET /api/billing/plans`, `POST /api/billing/checkout · verify · contact-sales`, `GET /api/billing/history`, `POST /api/billing/webhook` |
+| Org admin | `/api/org` overview, `/members`, `/invites`, `/jobs`, `POST /jobs/:id/screen` (multipart `resumes[]`), `GET /jobs/:id/export.csv` |
+| Super admin | `/api/admin/stats · users · orgs · plans · payments · leads · audit`, grants and refunds |
+
+Sample resumes and job descriptions are in `sample-data/`.

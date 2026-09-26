@@ -1,0 +1,231 @@
+generator client {
+  provider      = "prisma-client-js"
+  // "rhel-openssl-3.0.x" is the engine Vercel's Node.js functions need.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ORG_ADMIN
+  SUPER_ADMIN
+}
+
+enum PlanInterval {
+  FREE
+  ONE_TIME
+  MONTHLY
+  YEARLY
+  CUSTOM
+}
+
+enum SubStatus {
+  ACTIVE
+  PENDING
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(USER)
+  suspended    Boolean  @default(false)
+  orgId        String?
+  org          Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+  lastLoginAt  DateTime?
+  passwordChangedAt DateTime?
+
+  scans         Scan[]
+  passwordResets PasswordReset[]
+  optimizeJobs  OptimizeJob[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  auditLogs     AuditLog[]
+}
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  extraSeats Int     @default(0)
+  suspended Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  members       User[]
+  invites       Invite[]
+  jobs          Job[]
+  scans         Scan[]
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique // sha256 of the emailed token; the raw token is never stored
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Invite {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  role      Role     @default(USER)
+  orgId     String
+  org       Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  acceptedAt DateTime?
+  lastSentAt DateTime?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Plan {
+  id          String       @id @default(uuid())
+  code        String       @unique // free | pro | team | enterprise
+  name        String
+  tagline     String
+  priceInr    Int          // in rupees; 0 for free / custom
+  yearlyPriceInr Int?
+  interval    PlanInterval
+  audience    String       // "individual" | "team"
+  highlight   Boolean      @default(false)
+  // limits: { scansPerMonth: number|null, seats: number|null, bulkPerMonth: number|null, seatPriceInr?: number }
+  limits      Json
+  // features: string[] keys (chat, rewrites, jdMatch, history, bulk, export, api, sso, whiteLabel)
+  features    Json
+  bullets     Json         // marketing bullet list
+  sortOrder   Int          @default(0)
+  active      Boolean      @default(true)
+  updatedAt   DateTime     @updatedAt
+
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model Subscription {
+  id        String    @id @default(uuid())
+  planId    String
+  plan      Plan      @relation(fields: [planId], references: [id])
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId     String?
+  org       Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  status    SubStatus @default(ACTIVE)
+  periodEnd DateTime?
+  razorpaySubscriptionId String?
+  createdAt DateTime  @default(now())
+}
+
+model Payment {
+  id        String        @id @default(uuid())
+  amountInr Int
+  status    PaymentStatus @default(CREATED)
+  planId    String
+  plan      Plan          @relation(fields: [planId], references: [id])
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId     String?
+  org       Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  cycle     String        @default("one_time") // one_time | monthly | yearly
+  razorpayOrderId   String? @unique
+  razorpayPaymentId String?
+  createdAt DateTime      @default(now())
+}
+
+model Job {
+  id          String   @id @default(uuid())
+  orgId       String
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  status      String   @default("open") // open | closed
+  createdAt   DateTime @default(now())
+  scans       Scan[]
+}
+
+model Scan {
+  id        String   @id @default(uuid())
+  sessionId String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orgId     String?
+  org       Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  jobId     String?
+  job       Job?     @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  fileName  String
+  candidateName String?
+  score     Int
+  result    Json
+  bulk      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([orgId, createdAt])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+model ContactLead {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  company   String
+  seats     Int?
+  message   String?
+  status    String   @default("new") // new | contacted | won | lost
+  createdAt DateTime @default(now())
+}
+
+/// Background "Boost to 90+" runs. Persisted so a server restart doesn't silently lose them.
+model OptimizeJob {
+  id           String   @id
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scanId       String
+  status       String   @default("running") // running | done | failed
+  step         String   @default("Starting")
+  resultScanId String?
+  error        String?
+  blockers     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId, scanId, status])
+}
+
+/// Session tokens ended by logout (by JWT id). Rows can be pruned after expiresAt.
+model RevokedToken {
+  jti       String   @id
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}

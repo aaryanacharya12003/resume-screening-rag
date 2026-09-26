@@ -1,35 +1,25 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { RAGService } from '../services/ragService';
-import { ChatRequest, ChatResponse } from '../types';
+import { requireAuth, requireFeature } from '../middleware/auth';
+import { ah } from '../lib/http';
+import { findAccessibleScan } from './scans';
 
 const router = Router();
 const ragService = new RAGService();
 
-router.post('/', async (req, res) => {
-  try {
-    const { sessionId, question }: ChatRequest = req.body;
-
-    console.log('\n💬 === NEW CHAT REQUEST ===');
-    console.log(`🔑 Session: ${sessionId}`);
-    console.log(`❓ Question: "${question}"`);
-
-    if (!sessionId || !question) {
-      console.log('❌ Missing sessionId or question');
-      return res.status(400).json({ error: 'Session ID and question are required' });
-    }
-
-    // Use RAG to answer question
-    console.log('🔍 Searching vectors in Pinecone...');
-    const response: ChatResponse = await ragService.answerQuestion(sessionId, question);
-    console.log(`✓ Answer generated (${response.answer.length} chars)`);
-    console.log(`📚 Sources: ${response.sources.join(', ')}`);
-    console.log('✅ Chat complete!\n');
-
-    res.json(response);
-  } catch (error) {
-    console.error('\n❌ Chat error:', error);
-    res.status(500).json({ error: 'Failed to process question' });
-  }
-});
+router.post(
+  '/',
+  requireAuth,
+  requireFeature('chat'),
+  ah(async (req, res) => {
+    const { sessionId, question } = z
+      .object({ sessionId: z.string().min(1), question: z.string().trim().min(2).max(500) })
+      .parse(req.body);
+    // Only lets users query vectors of scans they own (or their org's, for org admins).
+    const scan = await findAccessibleScan(sessionId, req.user!);
+    res.json(await ragService.answerQuestion(scan.sessionId, question));
+  }),
+);
 
 export default router;

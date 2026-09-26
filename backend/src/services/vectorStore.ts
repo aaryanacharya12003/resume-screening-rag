@@ -1,6 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 import { VectorMetadata, ResumeChunk } from '../types';
 import { EmbeddingService } from './embeddingService';
+import { EMBEDDING_DIMENSIONS } from '../config/huggingface';
 
 export class VectorStore {
   private pinecone: Pinecone;
@@ -90,7 +91,7 @@ export class VectorStore {
     
     // Fetch all vectors for this session and type
     const results = await index.query({
-      vector: new Array(1536).fill(0), // Dummy vector
+      vector: new Array(EMBEDDING_DIMENSIONS).fill(0), // Dummy vector
       topK: 100,
       filter: { sessionId, type },
       includeMetadata: true,

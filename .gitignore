@@ -1,7 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
-yarn.lock
 
 # Environment variables
 .env
@@ -30,3 +28,10 @@ backend/uploads/*
 # Testing
 coverage/
 .nyc_output/
+
+.devdb/
+
+# Local tooling and reference material (not part of the app)
+.claude/
+resume test/
+.vercel

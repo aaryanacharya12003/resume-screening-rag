@@ -1,4 +1,4 @@
-import { openai, CHAT_MODEL } from '../config/openai';
+import { groq, GROQ_CHAT_MODEL } from '../config/groq';
 import { VectorStore } from './vectorStore';
 import { ChatResponse } from '../types';
 
@@ -48,8 +48,8 @@ QUESTION: ${question}
 Provide a clear, accurate answer based on the resume context above:`;
 
     try {
-      const response = await openai.chat.completions.create({
-        model: 'openai/gpt-3.5-turbo',
+      const response = await groq.chat.completions.create({
+        model: GROQ_CHAT_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3, // Lower temperature for more accurate responses
         max_tokens: 300, // Increase for complete answers

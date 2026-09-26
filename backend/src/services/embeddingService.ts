@@ -1,15 +1,15 @@
-import { openai, EMBEDDING_MODEL } from '../config/openai';
+import { hf, HF_EMBEDDING_MODEL } from '../config/huggingface';
 
 export class EmbeddingService {
   async generateEmbedding(text: string): Promise<number[]> {
     try {
-      const response = await openai.embeddings.create({
-        model: EMBEDDING_MODEL,
-        input: text,
-        dimensions: 1024, // Match Pinecone index
+      const result = await hf.featureExtraction({
+        model: HF_EMBEDDING_MODEL,
+        inputs: text,
+        provider: 'hf-inference',
       });
 
-      return response.data[0].embedding;
+      return result as number[];
     } catch (error) {
       console.error('Error generating embedding:', error);
       throw new Error('Failed to generate embedding');
@@ -18,13 +18,13 @@ export class EmbeddingService {
 
   async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
     try {
-      const response = await openai.embeddings.create({
-        model: EMBEDDING_MODEL,
-        input: texts,
-        dimensions: 1024, // Match Pinecone index
+      const result = await hf.featureExtraction({
+        model: HF_EMBEDDING_MODEL,
+        inputs: texts,
+        provider: 'hf-inference',
       });
 
-      return response.data.map(item => item.embedding);
+      return result as number[][];
     } catch (error) {
       console.error('Error generating batch embeddings:', error);
       throw new Error('Failed to generate batch embeddings');
