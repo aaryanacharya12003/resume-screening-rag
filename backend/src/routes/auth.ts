@@ -9,6 +9,7 @@ import { getEntitlement, getUsage, seatInfo } from '../lib/entitlements';
 import { ah, HttpError } from '../lib/http';
 import { audit } from '../lib/audit';
 import { appUrl, sendPasswordReset } from '../lib/mailer';
+import { issueVerificationCode, resendWaitSeconds, verifyCode } from '../lib/emailOtp';
 
 const router = Router();
 
@@ -24,9 +25,9 @@ const registerSchema = z.object({
   inviteToken: z.string().optional(),
 });
 
-function publicUser(u: { id: string; email: string; name: string; role: string; orgId: string | null; createdAt: Date }) {
+function publicUser(u: { id: string; email: string; name: string; role: string; orgId: string | null; createdAt: Date; emailVerifiedAt: Date | null }) {
   const { id, email, name, role, orgId, createdAt } = u;
-  return { id, email, name, role, orgId, createdAt };
+  return { id, email, name, role, orgId, createdAt, emailVerified: Boolean(u.emailVerifiedAt) };
 }
 
 router.post(
@@ -41,6 +42,8 @@ router.post(
 
     let orgId: string | null = null;
     let role: 'USER' | 'ORG_ADMIN' = 'USER';
+    // An invite link was emailed to this address, so opening it already proves the address.
+    let verified = false;
 
     if (data.inviteToken) {
       const invite = await prisma.invite.findUnique({ where: { token: data.inviteToken } });
@@ -48,6 +51,7 @@ router.post(
       if (invite.email.toLowerCase() !== data.email) throw new HttpError(400, 'This invite was sent to a different email');
       orgId = invite.orgId;
       role = invite.role === 'ORG_ADMIN' ? 'ORG_ADMIN' : 'USER';
+      verified = true;
       await prisma.invite.update({ where: { id: invite.id }, data: { acceptedAt: new Date() } });
     } else if (data.accountType === 'team') {
       if (!data.companyName) throw new HttpError(400, 'Company name is required for a team account');
@@ -59,9 +63,13 @@ router.post(
     }
 
     const user = await prisma.user.create({
-      data: { name: data.name, email: data.email, passwordHash, orgId, role, lastLoginAt: new Date() },
+      data: { name: data.name, email: data.email, passwordHash, orgId, role, lastLoginAt: new Date(), emailVerifiedAt: verified ? new Date() : null },
     });
     await audit(user.id, 'user.register', user.email, { role, orgId });
+    if (!verified) {
+      // A failed email doesn't block sign-up: the verify page can send another code.
+      await issueVerificationCode(user).catch((e) => console.error('Verification email failed:', e?.message || e));
+    }
     setAuthCookie(res, signToken(user.id));
     res.status(201).json({ user: publicUser(user) });
   }),
@@ -142,13 +150,44 @@ router.post(
       prisma.user.update({
         where: { id: reset.userId },
         // passwordChangedAt signs out every session issued before this moment.
-        data: { passwordHash: await bcrypt.hash(password, 10), passwordChangedAt: now, lastLoginAt: now },
+        // The reset link was emailed, so using it also verifies the address.
+        data: { passwordHash: await bcrypt.hash(password, 10), passwordChangedAt: now, lastLoginAt: now, emailVerifiedAt: reset.user.emailVerifiedAt ?? now },
       }),
       prisma.passwordReset.updateMany({ where: { userId: reset.userId, usedAt: null }, data: { usedAt: now } }),
     ]);
     await audit(user.id, 'user.password_reset', user.email);
     setAuthCookie(res, signToken(user.id));
     res.json({ user: publicUser(user) });
+  }),
+);
+
+/** Confirms the sign-up email with the 6-digit code. */
+router.post(
+  '/verify-email',
+  limits.verifyEmail,
+  requireAuth,
+  ah(async (req, res) => {
+    const user = req.user!;
+    if (user.emailVerifiedAt) return res.json({ ok: true, alreadyVerified: true });
+    const { code } = z.object({ code: z.string().trim().regex(/^\d{6}$/, 'Enter the 6-digit code from the email') }).parse(req.body);
+    await verifyCode(user.id, code);
+    await audit(user.id, 'user.email_verified', user.email);
+    res.json({ ok: true });
+  }),
+);
+
+/** Sends a fresh code (at most one a minute per account). */
+router.post(
+  '/resend-code',
+  limits.resendCode,
+  requireAuth,
+  ah(async (req, res) => {
+    const user = req.user!;
+    if (user.emailVerifiedAt) return res.json({ ok: true, alreadyVerified: true });
+    const wait = await resendWaitSeconds(user.id);
+    if (wait > 0) throw new HttpError(429, `Please wait ${wait} seconds before asking for another code.`, 'RESEND_WAIT');
+    const { delivered } = await issueVerificationCode(user);
+    res.json({ ok: true, emailed: delivered });
   }),
 );
 

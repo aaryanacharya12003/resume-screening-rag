@@ -16,6 +16,8 @@ export function RequireAuth({ roles, children }: { roles?: Role[]; children: Rea
   const loc = useLocation();
   if (loading) return <FullPageSpinner />;
   if (!me) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
+  // New accounts confirm their email before using the app.
+  if (!me.user.emailVerified) return <Navigate to={`/verify-email?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
   if (roles && !roles.includes(me.user.role)) return <Navigate to={homeFor(me.user.role)} replace />;
   return <>{children}</>;
 }
@@ -23,6 +25,6 @@ export function RequireAuth({ roles, children }: { roles?: Role[]; children: Rea
 export function GuestOnly({ children }: { children: ReactNode }) {
   const { me, loading } = useAuth();
   if (loading) return <FullPageSpinner />;
-  if (me) return <Navigate to={homeFor(me.user.role)} replace />;
+  if (me) return <Navigate to={me.user.emailVerified ? homeFor(me.user.role) : '/verify-email'} replace />;
   return <>{children}</>;
 }

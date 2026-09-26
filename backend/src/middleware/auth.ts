@@ -55,6 +55,8 @@ function readToken(req: Request): string | undefined {
   return req.cookies?.[AUTH_COOKIE];
 }
 
+const UNVERIFIED_ALLOWED = new Set(['/api/auth/me', '/api/auth/verify-email', '/api/auth/resend-code', '/api/auth/logout']);
+
 export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
     const token = readToken(req);
@@ -72,6 +74,9 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
       throw new HttpError(401, 'Your password was changed. Please sign in again.');
     }
     if (user.suspended) throw new HttpError(403, 'Your account is suspended');
+    if (!user.emailVerifiedAt && !UNVERIFIED_ALLOWED.has(req.originalUrl.split('?')[0].replace(/\/$/, ''))) {
+      throw new HttpError(403, 'Please confirm your email first. We sent a 6-digit code to your inbox.', 'EMAIL_UNVERIFIED');
+    }
     if (user.org?.suspended && user.role !== 'SUPER_ADMIN') throw new HttpError(403, 'Your organization is suspended');
     req.user = user;
     next();

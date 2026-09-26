@@ -340,7 +340,20 @@ export async function optimizeResume(
     const withSkills = insertSkills(originalText, confirmed.map((c) => c.skill));
     if (withSkills !== originalText) {
       try {
-        const analysis = await scoreDraft(withSkills, jd, progress);
+        const measured = await scoreDraft(withSkills, jd, progress);
+        // Only the SKILLS line changed, so ATS, Impact and Readability are carried over from the
+        // original: re-scoring unchanged text only measures the scorer's noise (the same resume has
+        // scored 78 and 88 an hour apart). Keywords is re-measured and counts only if it rose, and an
+        // added skill the candidate has can't make the resume a worse fit, so the overall can't fall.
+        const categories = {
+          ...current.categories,
+          keywords: Math.max(Number(current.categories.keywords) || 0, Number(measured.categories.keywords) || 0),
+        } as MatchAnalysis['categories'];
+        const analysis: MatchAnalysis = {
+          ...measured,
+          categories,
+          score: jd ? Math.max(current.score, measured.score) : categoryAverage(categories),
+        };
         const dips = regressions(current, analysis);
         const added = confirmed.map((c) => c.skill).filter((s) => withSkills.includes(s));
         console.log(`  ✨ skills added in code: ${current.score} → ${analysis.score}${dips.length ? ` (below original: ${dips.map((x) => `${x.label} ${x.from}→${x.to}`).join(', ')})` : ''}`);
@@ -452,7 +465,8 @@ export async function optimizeResume(
   }
 
   // Every pass errored (provider outage): report that, rather than claiming the resume can't improve.
-  if (failedPasses === attempts) throw new Error("The AI service is busy right now. Please try Boost again in a minute.");
+  // (A version already saved, e.g. from adding confirmed skills, is still returned.)
+  if (failedPasses === attempts && bestText === originalText) throw new Error("The AI service is busy right now. Please try Boost again in a minute.");
 
   return {
     resumeText: bestText,

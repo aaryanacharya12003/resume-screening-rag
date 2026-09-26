@@ -48,7 +48,7 @@ export interface Plan {
 }
 
 export interface Me {
-  user: { id: string; email: string; name: string; role: Role; orgId: string | null; createdAt: string };
+  user: { id: string; email: string; name: string; role: Role; orgId: string | null; createdAt: string; emailVerified: boolean };
   org: null | { id: string; name: string; slug: string; seats: { total: number | null; used: number; pending: number } };
   plan: { code: Plan['code']; name: string; limits: PlanLimits; features: string[]; source: string; periodEnd: string | null };
   usage: { scansTotal: number; scansThisMonth: number; orgBulkThisMonth: number };

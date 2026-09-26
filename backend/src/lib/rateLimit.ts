@@ -57,6 +57,12 @@ export const contactSales = make({
 });
 
 /** Broad ceiling for everything under /api. */
+/** Code checks per IP (each code also locks after 5 wrong tries). */
+export const verifyEmail = make({ windowMs: 15 * 60 * 1000, limit: 30, keyGenerator: ip, message: 'Too many code attempts from this network. Try again in a few minutes.' });
+
+/** Verification emails per IP (each account also waits 60 s between codes). */
+export const resendCode = make({ windowMs: 60 * 60 * 1000, limit: 10, keyGenerator: ip, message: 'Too many codes requested from this network. Try again later.' });
+
 export const apiGeneral = make({
   windowMs: 60 * 1000,
   limit: 300,

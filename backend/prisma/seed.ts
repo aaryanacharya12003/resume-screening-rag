@@ -70,7 +70,7 @@ async function main() {
     await prisma.user.upsert({
       where: { email },
       update: { role: 'SUPER_ADMIN' },
-      create: { email, name: 'Super Admin', role: 'SUPER_ADMIN', passwordHash: await bcrypt.hash(password, 10) },
+      create: { email, name: 'Super Admin', role: 'SUPER_ADMIN', passwordHash: await bcrypt.hash(password, 10), emailVerifiedAt: new Date() },
     });
     console.log(`✓ super admin ${email}`);
   } else {

@@ -8,6 +8,7 @@ import PricingPage from './pages/public/Pricing';
 import Login from './pages/public/Login';
 import Register from './pages/public/Register';
 import { ForgotPassword, ResetPassword } from './pages/public/PasswordReset';
+import VerifyEmail from './pages/public/VerifyEmail';
 // Signed-in areas load on demand so visitors to the public pages don't download the app,
 // org and admin screens (and their chart libraries).
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="/invite/:token" element={<Register />} />
         <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
         <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route path="/app" element={<Dashboard />} />

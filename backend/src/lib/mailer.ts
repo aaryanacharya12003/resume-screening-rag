@@ -23,7 +23,7 @@ export const appUrl = (path: string) => `${(process.env.FRONTEND_URL || 'http://
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 /** Resumint-styled email: cream background, bordered card, yellow CTA with a hard shadow. */
-export function layout(opts: { heading: string; body: string[]; cta: { label: string; url: string }; footnote: string }) {
+export function layout(opts: { heading: string; body: string[]; cta?: { label: string; url: string }; code?: string; footnote: string }) {
   const paras = opts.body.map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#5A5D7E">${p}</p>`).join('');
   return `<!doctype html><html><body style="margin:0;background:#F5F6FC;font-family:'Plus Jakarta Sans',Segoe UI,Arial,sans-serif;color:#1C1B3F">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F6FC;padding:32px 16px"><tr><td align="center">
@@ -32,8 +32,9 @@ export function layout(opts: { heading: string; body: string[]; cta: { label: st
 <tr><td style="background:#FFFFFF;border:2.4px solid #1C1B3F;border-radius:18px;box-shadow:4px 4px 0 0 #1C1B3F;padding:32px">
 <h1 style="margin:0 0 16px;font-family:Fraunces,Georgia,serif;font-weight:500;font-size:30px;line-height:1.15">${opts.heading}</h1>
 ${paras}
-<a href="${opts.cta.url}" style="display:inline-block;margin:8px 0 18px;background:#6EF0C2;color:#1C1B3F;border:2.4px solid #1C1B3F;border-radius:999px;padding:13px 24px;font-weight:700;font-size:15px;text-decoration:none;box-shadow:4px 4px 0 0 #1C1B3F">${opts.cta.label} &rarr;</a>
-<p style="margin:0;font-size:12px;color:#A2A6C4;word-break:break-all">Or paste this link into your browser:<br>${opts.cta.url}</p>
+${opts.code ? `<div style="margin:8px 0 18px;display:inline-block;background:#6EF0C2;border:2.4px solid #1C1B3F;border-radius:14px;box-shadow:4px 4px 0 0 #1C1B3F;padding:14px 22px;font-family:Consolas,Menlo,monospace;font-weight:700;font-size:32px;letter-spacing:10px;color:#1C1B3F">${opts.code}</div>` : ''}
+${opts.cta ? `<a href="${opts.cta.url}" style="display:inline-block;margin:8px 0 18px;background:#6EF0C2;color:#1C1B3F;border:2.4px solid #1C1B3F;border-radius:999px;padding:13px 24px;font-weight:700;font-size:15px;text-decoration:none;box-shadow:4px 4px 0 0 #1C1B3F">${opts.cta.label} &rarr;</a>
+<p style="margin:0;font-size:12px;color:#A2A6C4;word-break:break-all">Or paste this link into your browser:<br>${opts.cta.url}</p>` : ''}
 </td></tr>
 <tr><td style="padding:18px 4px 0;font-size:12px;color:#A2A6C4">${opts.footnote}</td></tr>
 </table></td></tr></table></body></html>`;
@@ -60,6 +61,20 @@ export function sendPasswordReset(to: string, name: string, url: string) {
       footnote: "Didn't ask for this? You can ignore this email; your password stays the same.",
     }),
     `Reset your Resumint password (link expires in 1 hour):\n${url}\n\nIf you didn't ask for this, ignore this email.`,
+  );
+}
+
+export function sendVerificationCode(to: string, name: string, code: string) {
+  return sendMail(
+    to,
+    `${code} is your Resumint verification code`,
+    layout({
+      heading: 'Confirm your email',
+      body: [`Hi ${esc(name.split(' ')[0])},`, 'Enter this code on the Resumint sign-up page to confirm your email. It expires in 10 minutes.'],
+      code,
+      footnote: "Didn't sign up for Resumint? You can ignore this email; the account won't be activated.",
+    }),
+    `Your Resumint verification code is ${code}\nIt expires in 10 minutes.\n\nIf you didn't sign up, ignore this email.`,
   );
 }
 

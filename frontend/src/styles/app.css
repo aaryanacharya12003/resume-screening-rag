@@ -168,3 +168,7 @@ code { font: 600 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; backgroun
 .resume-editor { min-height: 52vh; font: 400 13.5px/1.6 var(--body); }
 .resume-text.diff ins { background: var(--green); color: var(--ink); text-decoration: none; border-radius: 3px; padding: 0 2px; }
 .resume-text.diff del { background: var(--bad-soft); color: var(--bad); text-decoration: line-through; border-radius: 3px; padding: 0 2px; }
+
+/* Email verification code */
+.otp-input { font-family: ui-monospace, "JetBrains Mono", Consolas, monospace; font-size: 26px; letter-spacing: .5em; text-align: center; padding-left: .5em; }
+.link--button { font-family: inherit; line-height: inherit; }

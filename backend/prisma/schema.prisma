@@ -49,9 +49,12 @@ model User {
   createdAt    DateTime @default(now())
   lastLoginAt  DateTime?
   passwordChangedAt DateTime?
+  // Null until the sign-up code is entered (invite and password-reset links also verify).
+  emailVerifiedAt DateTime?
 
   scans         Scan[]
   passwordResets PasswordReset[]
+  emailVerifications EmailVerification[]
   optimizeJobs  OptimizeJob[]
   subscriptions Subscription[]
   payments      Payment[]
@@ -72,6 +75,20 @@ model Organization {
   scans         Scan[]
   subscriptions Subscription[]
   payments      Payment[]
+}
+
+/// One-time sign-up codes. Only a salted hash of each code is stored.
+model EmailVerification {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model PasswordReset {
