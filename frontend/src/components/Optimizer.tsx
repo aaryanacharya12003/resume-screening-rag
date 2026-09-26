@@ -23,6 +23,9 @@ export function BoostCard({ scan, canUse }: { scan: Scan; canUse: boolean }) {
   const gaps = useMemo(() => findResultGaps(scan.result.resumeText ?? ''), [scan.result.resumeText]);
   const [results, setResults] = useState<Record<string, string>>({});
   const [showAllGaps, setShowAllGaps] = useState(false);
+  // Boost needs something real to add: a result for a bullet or a skill the candidate has.
+  const needsInput = gaps.length > 0 || missing.length > 0;
+  const hasInput = Object.keys(picked).length > 0 || Object.values(results).some((v) => v.trim().length >= 2);
   const [job, setJob] = useState<OptimizeJob | null>(null);
   const [err, setErr] = useState<{ text: string; blockers?: string[] } | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -205,9 +208,21 @@ export function BoostCard({ scan, canUse }: { scan: Scan; canUse: boolean }) {
           </div>
         </div>
       ) : (
-        <button className="btn btn--accent" style={{ alignSelf: 'flex-start' }} onClick={start}>
-          Boost to 90+ <span className="arrow">→</span>
-        </button>
+        <div className="stack" style={{ gap: 8, alignItems: 'flex-start' }}>
+          <button className="btn btn--accent" onClick={start} disabled={needsInput && !hasInput} aria-describedby={needsInput && !hasInput ? 'boost-hint' : undefined}>
+            Boost to 90+ <span className="arrow">→</span>
+          </button>
+          {needsInput && !hasInput && (
+            <>
+              <small id="boost-hint" className="muted">
+                Add a real result to at least one bullet above, or tick a skill you have. Rewording alone usually can't raise the score without lowering another area.
+              </small>
+              <button type="button" className="btn btn--sm btn--light" onClick={start}>
+                Try rewording only
+              </button>
+            </>
+          )}
+        </div>
       )}
     </div>
   );

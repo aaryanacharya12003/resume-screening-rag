@@ -139,3 +139,31 @@ export function findNewSkillItems(original: string, draft: string) {
   }
   return [...new Set(out)];
 }
+
+/**
+ * Adds skills the candidate confirmed to the SKILLS section, changing nothing else, so no other
+ * part of the resume can get worse. Skills the text already mentions are skipped. Without a
+ * SKILLS section, one is added at the end.
+ */
+export function insertSkills(text: string, skills: string[]) {
+  const add = [...new Set(skills.map((s) => s.trim()).filter(Boolean))].filter((s) => !containsToken(text, s));
+  if (!add.length) return text;
+  const lines = text.replace(/\r\n/g, '\n').split('\n');
+  const start = lines.findIndex((l) => SKILL_HEADING.test(l));
+  if (start < 0) return `${text.replace(/\s+$/, '')}\n\nSKILLS\n${add.join(', ')}\n`;
+  // The section runs until the next heading; the new line goes after its last non-empty line.
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (ANY_HEADING.test(lines[i]) && !SKILL_HEADING.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  let last = start;
+  for (let i = start + 1; i < end; i++) if (lines[i].trim()) last = i;
+  // Match the section's style: "Category: a, b" lines get an "Additional:" line, plain lists get a plain line.
+  const labelled = lines.slice(start + 1, end).some((l) => /^[\w &/+.-]{2,30}:\s*\S/.test(l.trim()));
+  const bullet = lines[last].match(/^\s*([-•*▪]\s+)/)?.[1] ?? '';
+  lines.splice(last + 1, 0, `${bullet}${labelled ? 'Additional: ' : ''}${add.join(', ')}`);
+  return lines.join('\n');
+}

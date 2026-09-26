@@ -196,9 +196,15 @@ router.post(
       try {
         const out = await optimizeResume(resumeText, jd, result, setStep, confirmedSkills, confirmedResults);
         await updateJob(job.id, { blockers: out.blockers });
+        const hadInput = confirmedSkills.length > 0 || confirmedResults.length > 0;
+        if (!out.hasDraft && !hadInput) {
+          throw new Error(
+            "Rewording alone couldn't raise your score without lowering another area, so we kept your original. Add a real result to at least one of the bullets listed above (or tick a skill you have) and Boost again.",
+          );
+        }
         if (!out.hasDraft && out.regressed.length) {
           throw new Error(
-            `Every rewrite we tried lowered your ${out.regressed.join(' and ')} score, so we kept your original. Add real results to the bullets listed above (and tick skills you have), then try again.`,
+            `Every version we tried lowered your ${out.regressed.join(' and ')} score, so we kept your original. Add results to more of the bullets listed above, then Boost again.`,
           );
         }
         if (!out.hasDraft) {

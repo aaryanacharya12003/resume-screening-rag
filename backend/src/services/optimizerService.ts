@@ -2,12 +2,15 @@ import { prisma } from '../config/db';
 import { groq, GROQ_CHAT_MODEL } from '../config/groq';
 import { MatchAnalysis } from '../types';
 import { categoryAverage, MatchingService } from './matchingService';
-import { contentLoss, findNewSkillItems, findUnsupported, norm } from '../lib/honesty';
+import { contentLoss, findNewSkillItems, findUnsupported, insertSkills, norm } from '../lib/honesty';
 
 export const TARGET_SCORE = 90;
 // Passes stop as soon as a version reaches TARGET_SCORE; each pass edits the best version so far.
 // Enough for: work in the candidate's results, repair what that cost, then polish.
 const MAX_ATTEMPTS = Number(process.env.OPT_PASSES || 4);
+// Vercel stops a function after 300 s. A pass can take about a minute when the AI provider makes us
+// wait, so no new pass starts after this point and the best version so far is saved.
+const PASS_START_BUDGET_MS = 180_000;
 
 const CATEGORY_KEYS = ['ats', 'impact', 'keywords', 'readability'] as const;
 const CATEGORY_LABEL: Record<(typeof CATEGORY_KEYS)[number], string> = { ats: 'ATS', impact: 'Impact', keywords: 'Keywords', readability: 'Readability' };
@@ -278,6 +281,7 @@ export async function optimizeResume(
   confirmed: ConfirmedSkill[] = [],
   results: ConfirmedResult[] = [],
 ): Promise<OptimizeResult> {
+  const startedAt = Date.now();
   const isConfirmed = (term: string) => confirmed.some((c) => norm(c.skill) === norm(term));
   // Skills the user vouched for become facts the rewrite may use (and the guard accepts).
   // Skills and results the user supplied are facts the rewrite may use (and the guard accepts).
@@ -311,7 +315,7 @@ export async function optimizeResume(
   const catSum = (a: MatchAnalysis) => Object.values(a.categories ?? {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
   // Areas already tried on the working version without success; the next pass tries another.
   let tried = new Set<CategoryKey>();
-  const firstFocus: CategoryKey[] = [...(results.length ? (['impact'] as const) : []), ...(confirmed.length ? (['keywords'] as const) : [])];
+  const firstFocus: CategoryKey[] = [...(results.length ? (['impact'] as const) : []), ...(confirmed.some((c) => c.detail) ? (['keywords'] as const) : [])];
   const nextFocus = (): CategoryKey => {
     // What the candidate supplied goes in first: their results (impact), then their skills (keywords).
     const first = firstFocus.shift();
@@ -329,7 +333,46 @@ export async function optimizeResume(
   };
   let note = '';
 
+  // Step 0: skills the candidate confirmed go into SKILLS in code. Nothing else changes, so the
+  // other areas have no reason to drop, and later AI passes build on this version.
+  if (confirmed.length) {
+    progress('Adding the skills you confirmed');
+    const withSkills = insertSkills(originalText, confirmed.map((c) => c.skill));
+    if (withSkills !== originalText) {
+      try {
+        const analysis = await scoreDraft(withSkills, jd, progress);
+        const dips = regressions(current, analysis);
+        const added = confirmed.map((c) => c.skill).filter((s) => withSkills.includes(s));
+        console.log(`  ✨ skills added in code: ${current.score} → ${analysis.score}${dips.length ? ` (below original: ${dips.map((x) => `${x.label} ${x.from}→${x.to}`).join(', ')})` : ''}`);
+        const skillChanges = [`Added ${added.join(', ')} to SKILLS (skills you confirmed)`];
+        if (!dips.length && (analysis.score > best.score || (analysis.score === best.score && catSum(analysis) >= catSum(best)))) {
+          best = analysis;
+          bestText = withSkills;
+          changes = skillChanges;
+        } else if (dips.length) {
+          dips.forEach((x) => regressed.add(x.label));
+        }
+        // Even when scoring noise shows a small dip, the AI passes start from the version with the skills in it.
+        if (dipPoints(analysis) <= 6) {
+          work = analysis;
+          workText = withSkills;
+          workChanges = skillChanges;
+        }
+      } catch (e: any) {
+        console.error(`  ✖ scoring the skills version failed: ${e?.message || e}`);
+      }
+    }
+  }
+  const hadInput = confirmed.length > 0 || results.length > 0;
+
   while (attempts < MAX_ATTEMPTS && best.score < TARGET_SCORE) {
+    // Rewording alone rarely clears the no-category-drops rule. Without any input from the
+    // candidate, stop after two passes that changed nothing instead of spending two more.
+    if (!hadInput && attempts >= 2 && workText === originalText) break;
+    if (Date.now() - startedAt > PASS_START_BUDGET_MS) {
+      console.log(`  ⏱ optimize stopped after ${attempts} passes (time budget)`);
+      break;
+    }
     attempts++;
     const focus = nextFocus();
     const repairing = regressions(current, work).some((d) => d.key === focus);
