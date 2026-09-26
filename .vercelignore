@@ -1,0 +1,12 @@
+# Never upload local secrets or build artefacts
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+node_modules
+**/node_modules
+**/dist
+.claude
+resume test
+.devdb

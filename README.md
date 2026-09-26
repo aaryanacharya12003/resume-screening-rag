@@ -74,21 +74,25 @@ Use `npx prisma migrate deploy` against Supabase. Never pass the Supabase URL as
 
 ## Deploy on Vercel
 
-One Vercel project serves both halves: the React app as static files (`frontend/dist`) and the Express API as a serverless function (`api/index.js` → `backend/dist/app.js`). `vercel.json` holds the install/build commands, rewrites (`/api/*` → the function, everything else → the SPA) and a 300 s function limit for Boost.
+Live: **https://resumint-two.vercel.app** (Vercel project `resumint`).
 
-1. Import the GitHub repo in Vercel (**Add New → Project**). Leave *Root Directory* as the repo root and *Framework Preset* as **Other**; `vercel.json` supplies the rest.
-2. **Settings → Functions**: keep **Fluid Compute** on. It allows the 300 s `maxDuration` Boost needs (without it the Hobby plan caps functions at 60 s).
-3. **Settings → Environment Variables** (Production), same names as `backend/.env.example`:
-   - `DATABASE_URL`: use Supabase's **pooled** connection string (port 6543) with `?pgbouncer=true&connection_limit=1`, since serverless opens many short connections.
-   - `JWT_SECRET` (a new long random value), `GROQ_API_KEY` / `GROQ_API_KEYS`, `HF_API_KEY`, `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`
-   - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
-   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`
-   - `FRONTEND_URL=https://<your-project>.vercel.app` (used in email links and CORS), `TRUST_PROXY=1`, `NODE_ENV=production`
-   - Leave `VITE_API_URL` unset: the app calls `/api` on the same domain.
-4. Deploy. Migrations are not run by the build; apply new ones from your machine with `npm run db:deploy --prefix backend`.
-5. In Razorpay add the webhook `https://<your-domain>/api/billing/webhook` (events `payment.captured`, `order.paid`, `payment.failed`).
+`vercel.json` uses Vercel **Services**: one project, one domain, two services built separately.
 
-Limits on Vercel: request bodies are capped at 4.5 MB, so uploads are limited to 4 MB per file and bulk screening sends resumes in batches of 3. Rate limits are counted per function instance.
+- `frontend` (`frontend/`, Vite): static files, with an `index.html` fallback for client-side routes.
+- `backend` (`backend/`, Express, entry `src/app.ts`): runs as a Vercel Function. `/api/*` and `/health` are routed to it with their full path, so the Express routes are unchanged. Boost keeps running after its 202 response through `waitUntil`.
+
+Deploy from the repo root with `npx vercel deploy --prod`, or connect the GitHub repo in Vercel for deploy-on-push.
+
+Production environment variables (Project → Settings → Environment Variables): the names in `backend/.env.example`, plus:
+
+- `DATABASE_URL`: Supabase **transaction pooler** (port 6543) with `?pgbouncer=true&connection_limit=1`, not the direct connection.
+- `FRONTEND_URL=https://resumint-two.vercel.app` (email links and CORS) and `TRUST_PROXY=1`.
+- `NODE_PATH=/var/task/backend/node_modules`: **required.** The services packager currently puts the backend's code at the function root but its dependencies under `backend/node_modules`; without this the function fails with "Cannot find module 'dotenv'".
+- Don't set `NODE_ENV` (Vercel sets it). Installs use `npm ci --include=dev` because Prisma, TypeScript and Vite are dev dependencies.
+
+The build does not run migrations: run `npm run db:deploy --prefix backend` from your machine. Add the Razorpay webhook `https://<domain>/api/billing/webhook` (events `payment.captured`, `order.paid`, `payment.failed`) and set `RAZORPAY_WEBHOOK_SECRET`.
+
+Limits: request bodies are capped at 4.5 MB, so uploads are 4 MB per file and bulk screening sends batches of 3. Rate limits are counted per function instance.
 
 ## API overview
 
