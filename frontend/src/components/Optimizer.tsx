@@ -6,6 +6,7 @@ import { useToast } from './Toast';
 import { Modal } from './Modal';
 import { diffWords } from '../lib/diff';
 import { findResultGaps } from '../lib/resultGaps';
+import { TemplateId, TemplatePicker, useTemplateChoice } from './TemplatePicker';
 
 const TARGET = 90;
 
@@ -256,10 +257,10 @@ function useResumeActions(scan: Scan) {
       }
     },
     /** Downloads the server-formatted file (designed PDF or editable Word document). */
-    download: async (format: ExportFormat) => {
+    download: async (format: ExportFormat, template: TemplateId = 'classic') => {
       setBusy(format);
       try {
-        const res = await api.get(`/scans/${scan.id}/export`, { params: { format }, responseType: 'blob' });
+        const res = await api.get(`/scans/${scan.id}/export`, { params: { format, template }, responseType: 'blob' });
         const name =
           /filename="([^"]+)"/.exec(res.headers['content-disposition'] ?? '')?.[1] ?? `resume.${format}`;
         const url = URL.createObjectURL(res.data);
@@ -346,13 +347,15 @@ export function EditRescoreModal({ scan, onClose }: { scan: Scan; onClose: () =>
 /** Download / PDF / copy / edit actions for any scan whose text we have. */
 export function VersionActions({ scan, onEdit }: { scan: Scan; onEdit: () => void }) {
   const a = useResumeActions(scan);
+  const [template, setTemplate] = useTemplateChoice();
   if (!a.text) return null;
   return (
     <div className="row">
-      <button className="btn btn--accent btn--sm" onClick={() => a.download('pdf')} disabled={a.busy !== null}>
+      <TemplatePicker value={template} onChange={setTemplate} />
+      <button className="btn btn--accent btn--sm" onClick={() => a.download('pdf', template)} disabled={a.busy !== null}>
         {a.busy === 'pdf' && <span className="spinner" />} Download PDF
       </button>
-      <button className="btn btn--accent btn--sm" onClick={() => a.download('docx')} disabled={a.busy !== null}>
+      <button className="btn btn--accent btn--sm" onClick={() => a.download('docx', template)} disabled={a.busy !== null}>
         {a.busy === 'docx' && <span className="spinner" />} Download Word
       </button>
       <button className="btn btn--light btn--sm" onClick={a.copy}>Copy</button>
@@ -386,7 +389,7 @@ function CategoryDeltas({ before, after }: { before: Scan['result']['categories'
 }
 
 /** Inline word diff: removed text struck through in red, added text highlighted in green. */
-function ChangesView({ before, after }: { before: string; after: string }) {
+export function ChangesView({ before, after }: { before: string; after: string }) {
   const parts = useMemo(() => diffWords(before, after), [before, after]);
   const added = parts.filter((p) => p.kind === 'add').reduce((n, p) => n + p.text.split(/\s+/).filter(Boolean).length, 0);
   const removed = parts.filter((p) => p.kind === 'del').reduce((n, p) => n + p.text.split(/\s+/).filter(Boolean).length, 0);

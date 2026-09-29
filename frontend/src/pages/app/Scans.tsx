@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/auth';
 import { useToast } from '../../components/Toast';
 import { ScanReport } from '../../components/ScanReport';
 import { BoostCard, EditRescoreModal, VersionActions, VersionPanel } from '../../components/Optimizer';
+import { ResumeAssistant } from '../../components/ResumeAssistant';
 import { ChatPanel } from '../../components/ChatPanel';
 import { Empty, PageError, PageHead } from '../../components/Ui';
 import { ScanTable, useScans } from './Dashboard';
@@ -87,6 +88,15 @@ export function ScanDetail() {
       )}
       <ScanReport scan={scan} />
       <div id="boost"><BoostCard key={scan.id} scan={scan} canUse={canBoost} /></div>
+      {canEdit && (
+        <div className="card">
+          <div className="card__title">
+            <h3>Resume assistant</h3>
+            <span className="chip chip--plain">adds only what you tell it</span>
+          </div>
+          <ResumeAssistant key={scan.id} scan={scan} />
+        </div>
+      )}
       <div className="card">
         <div className="card__title">
           <h3>Ask the AI recruiter</h3>

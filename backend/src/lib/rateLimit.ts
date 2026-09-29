@@ -63,6 +63,9 @@ export const verifyEmail = make({ windowMs: 15 * 60 * 1000, limit: 30, keyGenera
 /** Verification emails per IP (each account also waits 60 s between codes). */
 export const resendCode = make({ windowMs: 60 * 60 * 1000, limit: 10, keyGenerator: ip, message: 'Too many codes requested from this network. Try again later.' });
 
+/** Resume assistant messages per IP (each one is an AI call). */
+export const assistant = make({ windowMs: 60 * 60 * 1000, limit: 60, keyGenerator: ip, message: 'That is a lot of messages in an hour. Take a short break and try again.' });
+
 export const apiGeneral = make({
   windowMs: 60 * 1000,
   limit: 300,

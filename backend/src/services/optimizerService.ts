@@ -58,7 +58,7 @@ const TACTICS: Record<(typeof CATEGORY_KEYS)[number], (hasJd: boolean) => string
       ? "KEYWORDS: for skills the resume ALREADY shows, use the job description's exact wording (e.g. 'Kubernetes (k8s)' if the resume says k8s). Mention each such skill in SKILLS and in at least one bullet where it was used. Order SKILLS and bullets by relevance to the job. Never add a skill the resume doesn't show, and never add capability phrases it doesn't state (for example orchestration, scalability or security claims around a tool it lists)."
       : 'KEYWORDS: use the standard industry names for the skills and tools the resume already shows (full name plus common abbreviation), mention each in SKILLS and in a bullet where it was used, most relevant first. Never add a skill the resume does not show.',
   readability: () =>
-    'READABILITY: one idea per bullet, under about twenty words each; split a bullet that carries two ideas or two results into two bullets. Past tense for past roles, no dense paragraphs, no repeated verbs within a role, no vague filler ("improved", "various", "responsible for").',
+    'READABILITY: tighten long bullets to about twenty-five words by cutting filler, never by splitting them: keep the same number of bullets per role, and keep related facts (an award and the work that earned it) in the same bullet. Past tense for past roles, no dense paragraphs, no repeated verbs within a role, no vague filler ("improved", "various", "responsible for").',
   ats: () =>
     'ATS: plain text only, contact details on the first lines, standard CAPS section headings, one date format, "Role | Company | Dates" per job, no symbols or emoji.',
 };
@@ -112,7 +112,7 @@ STRICT HONESTY RULES (a draft that breaks any of these is thrown away):
 
 EDITING RULES (the edited resume is re-scored in every area, and it is rejected if ANY area gets worse):
 - This is an edit, not a rewrite. Copy every line exactly unless changing it clearly improves the focus area.
-- Keep the same sections, section order, headings and roles, and keep every bullet. Do not merge or reorder content (splitting a bullet that carries two ideas is fine).
+- Keep the same sections, section order, headings and roles, and keep every bullet. Do not merge, split or reorder bullets: each role keeps the same number of bullets.
 - Keep bullets short and scannable: one idea each, one or two lines. Never make a bullet longer than it needs to be.
 - Protect ATS parsing, never make it worse: keep the name and every contact detail (email, phone, location, LinkedIn/GitHub/portfolio links) as plain text on the first lines; use standard section headings only; one date format everywhere (e.g. "Mon YYYY – Present"); no emoji, icons, decorative symbols or text art.
 - Keep exact skill and tool names as written in the resume (recruiter searches match them literally); list every one of them in SKILLS.

@@ -13,8 +13,10 @@ import { getResumeText, runScan } from '../services/scanService';
 import { createJob, getJob, optimizeResume, runningJobFor, TARGET_SCORE, updateJob } from '../services/optimizerService';
 import { MatchAnalysis } from '../types';
 import { audit } from '../lib/audit';
-import { resumeToDocx, resumeToPdf } from '../lib/resumeExport';
-import { structureResume, StructuredResume, textHash } from '../lib/resumeStructure';
+import { isTemplateId, resumeToDocx, resumeToPdf } from '../lib/resumeExport';
+import { assistantTurn } from '../services/assistantService';
+import * as limits from '../lib/rateLimit';
+import { structureKey, structureResume, StructuredResume } from '../lib/resumeStructure';
 
 const router = Router();
 const pdfParser = new PDFParser();
@@ -264,6 +266,8 @@ router.get(
   ah(async (req, res) => {
     const format = String(req.query.format);
     if (format !== 'pdf' && format !== 'docx') throw new HttpError(400, 'format must be pdf or docx');
+    const template = req.query.template === undefined ? 'classic' : String(req.query.template);
+    if (!isTemplateId(template)) throw new HttpError(400, 'Unknown template');
     const scan = await findAccessibleScan(req.params.id, req.user!);
     const ent = await getEntitlement(req.user!);
     if (!ent.features.includes('fullReport')) {
@@ -274,7 +278,7 @@ router.get(
 
     // AI structuring costs an LLM call, so it's cached on the scan and reused until the text changes.
     const result = scan.result as Record<string, any>;
-    const hash = textHash(text);
+    const hash = structureKey(text);
     let structured: StructuredResume = result.structured?.hash === hash ? result.structured.data : undefined;
     if (!structured) {
       const out = await structureResume(text);
@@ -285,7 +289,7 @@ router.get(
       });
     }
 
-    const file = format === 'pdf' ? await resumeToPdf(structured) : await resumeToDocx(structured);
+    const file = format === 'pdf' ? await resumeToPdf(structured, template) : await resumeToDocx(structured, template);
     const name = `${(scan.candidateName || baseName(scan.fileName)).replace(/[^\w.-]+/g, '-').replace(/-+/g, '-')}-resume.${format}`;
     res.setHeader(
       'Content-Type',
@@ -303,6 +307,37 @@ const baseName = (fileName: string) => fileName.replace(/\.(pdf|txt)$/i, '').rep
  * Scores text the user edited in the browser (e.g. placeholders filled in) as a new version,
  * against the same job description as the scan it came from.
  */
+/**
+ * Resume assistant: one chat turn. The client keeps the conversation and sends it each time; the
+ * answer is a reply and, when the resume changed, a proposed full text. Nothing is saved here:
+ * applying a proposal goes through /rescore, which scores it as a new version.
+ */
+router.post(
+  '/:id/assistant',
+  limits.assistant,
+  ah(async (req, res) => {
+    const user = req.user!;
+    const scan = await findAccessibleScan(req.params.id, user);
+    if (scan.userId !== user.id || scan.bulk) throw new HttpError(403, 'You can only edit your own resumes');
+    const ent = await getEntitlement(user);
+    if (!ent.features.includes('fullReport')) throw new HttpError(402, 'The resume assistant is a Pro feature.', 'UPGRADE_REQUIRED');
+    const { messages, draft } = z
+      .object({
+        messages: z
+          .array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(2000) }))
+          .min(1)
+          .max(24),
+        draft: z.string().trim().max(20000).optional(),
+      })
+      .parse(req.body);
+    if (messages[messages.length - 1].role !== 'user') throw new HttpError(400, 'The last message must be yours');
+    const resume = await getResumeText(scan);
+    if (resume.length < 100) throw new HttpError(422, 'This scan has no saved resume text. Re-upload the resume to use the assistant.');
+    const answer = await assistantTurn(resume, scan.result as unknown as MatchAnalysis, messages.slice(-12), draft || undefined);
+    res.json(answer);
+  }),
+);
+
 router.post(
   '/:id/rescore',
   ah(async (req, res) => {
