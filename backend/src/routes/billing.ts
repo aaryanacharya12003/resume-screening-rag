@@ -56,10 +56,10 @@ router.post(
     if (typeof req.body?.website === 'string' && req.body.website.trim()) return res.status(201).json({ ok: true });
     const data = z
       .object({
-        name: z.string().trim().min(2, 'Please enter your name').max(100),
-        email: z.string().trim().email('Please enter a valid email'),
+        name: z.string({ required_error: 'Please enter your name' }).trim().min(2, 'Please enter your name').max(100),
+        email: z.string({ required_error: 'Please enter your email' }).trim().email('Please enter a valid email'),
         topic: z.enum(['Support', 'Billing and refunds', 'Sales and teams', 'Privacy and data', 'Something else']).default('Support'),
-        message: z.string().trim().min(10, 'Please write a little more so we can help').max(2000),
+        message: z.string({ required_error: 'Please write your message' }).trim().min(10, 'Please write a little more so we can help').max(2000),
       })
       .parse(req.body);
     await prisma.contactLead.create({

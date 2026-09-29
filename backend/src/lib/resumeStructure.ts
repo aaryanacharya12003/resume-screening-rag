@@ -235,12 +235,13 @@ ${text.slice(0, 14000)}`;
 export const textHash = (text: string) => crypto.createHash('sha1').update(text).digest('hex');
 
 /** Bump when the structuring rules change: cached structures from older rules are rebuilt once. */
-const STRUCTURE_VERSION = 2;
+const STRUCTURE_VERSION = 3;
 export const structureKey = (text: string) => `v${STRUCTURE_VERSION}:${textHash(text)}`;
 
 /** Structure for export: AI first (verified), rule-based parser as the safe fallback. */
 const words = (s: string) => s.toLowerCase().match(/[a-z][a-z0-9+#.-]{3,}/g) ?? [];
 const normTitle = (s: string) => s.toLowerCase().replace(/[^a-z]+/g, ' ').trim();
+const FIELD_LABEL = /^(email|e-mail|phone|mobile|tel|location|address|linkedin|github|gitlab|portfolio|website|web)$/;
 
 /**
  * Sections whose title isn't one of the resume's headings were made up (e.g. a "KEY ACHIEVEMENTS"
@@ -261,7 +262,12 @@ function dropInventedSections(text: string, data: StructuredResume) {
   const kept = data.sections.filter((sec) => {
     const t = normTitle(sec.title);
     const tw = new Set(t.split(' '));
-    return headings.some((h) => h === t || h.split(' ').every((w) => tw.has(w)));
+    // A title may extend a heading ("SKILLS" → "TECHNICAL SKILLS") or be one part of a combined
+    // heading ("PUBLICATIONS, CERTIFICATIONS, AWARDS & LANGUAGES" → "AWARDS").
+    return headings.some((h) => {
+      const hw = h.split(' ');
+      return h === t || hw.every((w) => tw.has(w)) || [...tw].every((w) => hw.includes(w));
+    });
   });
   const dropped = data.sections.filter((sec) => !kept.includes(sec)).map((sec) => sec.title);
   return { data: { ...data, sections: kept }, dropped };
@@ -278,7 +284,8 @@ function lostLines(text: string, flat: string) {
     .map((l) => l.replace(/^[\s•*▪●◦-]+/, '').trim())
     .filter((l) => l.split(/\s+/).length >= 5)
     .filter((l) => {
-      const w = words(l);
+      // Field labels ("Email:", "Phone:", "LinkedIn:") are rightly dropped when contacts are structured.
+      const w = words(l).filter((x) => !FIELD_LABEL.test(x));
       return w.length >= 3 && w.filter((x) => have.has(x)).length / w.length < 0.6;
     });
 }
