@@ -1,4 +1,10 @@
 import PDFDocument from 'pdfkit';
+// pdfkit loads its built-in fonts at runtime through package "imports" (#standard-fonts/...),
+// which Vercel's file tracer doesn't follow, so the deployed function had no font files and every
+// PDF export failed. Importing the fonts we use by their public paths makes the tracer ship them.
+import 'pdfkit/standard-fonts/Helvetica';
+import 'pdfkit/standard-fonts/HelveticaBold';
+import 'pdfkit/standard-fonts/HelveticaOblique';
 import {
   AlignmentType,
   BorderStyle,
