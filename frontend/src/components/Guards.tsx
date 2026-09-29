@@ -12,9 +12,11 @@ export function FullPageSpinner() {
 }
 
 export function RequireAuth({ roles, children }: { roles?: Role[]; children: ReactNode }) {
-  const { me, loading } = useAuth();
+  const { me, loading, leaving } = useAuth();
   const loc = useLocation();
   if (loading) return <FullPageSpinner />;
+  // Just logged out from inside the app: go home, not to the login page.
+  if (!me && leaving) return <Navigate to="/" replace />;
   if (!me) return <Navigate to={`/login?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;
   // New accounts confirm their email before using the app.
   if (!me.user.emailVerified) return <Navigate to={`/verify-email?next=${encodeURIComponent(loc.pathname + loc.search)}`} replace />;

@@ -1,20 +1,13 @@
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 import { PublicNav } from '../../components/PublicNav';
 import { Footer } from '../../components/Footer';
 import { CompareTable, ContactSales, PricingPlans } from '../../components/Pricing';
 
 export default function PricingPage() {
-  const { hash } = useLocation();
-  useEffect(() => {
-    if (hash) setTimeout(() => document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' }), 150);
-  }, [hash]);
-
   return (
     <>
       <PublicNav />
       <main>
-        <section className="section">
+        <section className="section" id="plans">
           <div className="wrap">
             <div className="head head--center">
               <p className="eyebrow">Pricing</p>

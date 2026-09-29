@@ -29,7 +29,7 @@ export class MatchingService {
         const parsed = JSON.parse(response.choices[0].message.content || '{}');
         // An empty or partial answer would turn into all-zero scores; treat it as a failed call.
         const cats = parsed?.categories;
-        if (!cats || !['ats', 'impact', 'keywords', 'readability'].every((k) => Number(cats[k]) > 0)) {
+        if (!cats || !['ats', 'impact', 'keywords', 'readability'].every((k) => cats[k] !== null && cats[k] !== '' && Number.isFinite(Number(cats[k])))) {
           throw new Error('The scorer returned an incomplete result');
         }
         return parsed;
@@ -49,7 +49,12 @@ export class MatchingService {
    */
   async analyzeMatch(resumeText: string, jobDescriptionText?: string): Promise<MatchAnalysis> {
     const resume = resumeText.substring(0, MAX_CHARS);
-    const jd = jobDescriptionText?.substring(0, MAX_CHARS);
+    // Groq refuses a request whose prompt plus reply budget exceeds 8k tokens per minute per key. A long
+    // resume plus a long posting can pass that, so the posting is trimmed to fit: its tail is usually
+    // benefits and legal text, and the requirements come first.
+    const jdRoom = Math.max(2500, Math.floor((7600 - 2500 - 1100 - resume.length / 3.2) * 3.2));
+    const jdFull = jobDescriptionText?.substring(0, MAX_CHARS);
+    const jd = jdFull && jdFull.length > jdRoom ? `${jdFull.slice(0, jdRoom)}\n[job description shortened]` : jdFull;
 
     const prompt = `You are a senior technical recruiter and ATS expert reviewing a resume${jd ? ' against a job description' : ''}.
 
@@ -122,7 +127,9 @@ Score "ats" only on how reliably an applicant tracking system can parse the text
           'AI_BUSY',
         );
       }
-      throw new Error('Failed to analyze match');
+      // Anything else (a malformed answer after retries, a provider outage or timeout) is still the AI
+      // service failing, not the user's resume: say so plainly instead of a generic 500.
+      throw new HttpError(503, "Our AI reviewer couldn't finish this scan. Please try again in a minute; your scan wasn't used.", 'AI_FAILED');
     }
   }
 }

@@ -9,6 +9,14 @@ import Login from './pages/public/Login';
 import Register from './pages/public/Register';
 import { ForgotPassword, ResetPassword } from './pages/public/PasswordReset';
 import VerifyEmail from './pages/public/VerifyEmail';
+
+const InfoPages = () => import('./pages/public/InfoPages');
+const AboutPage = lazy(() => InfoPages().then((m) => ({ default: m.AboutPage })));
+const ContactPage = lazy(() => InfoPages().then((m) => ({ default: m.ContactPage })));
+const PrivacyPage = lazy(() => InfoPages().then((m) => ({ default: m.PrivacyPage })));
+const TermsPage = lazy(() => InfoPages().then((m) => ({ default: m.TermsPage })));
+const RefundPage = lazy(() => InfoPages().then((m) => ({ default: m.RefundPage })));
+const DeliveryPage = lazy(() => InfoPages().then((m) => ({ default: m.DeliveryPage })));
 // Signed-in areas load on demand so visitors to the public pages don't download the app,
 // org and admin screens (and their chart libraries).
 const Dashboard = lazy(() => import('./pages/app/Dashboard'));
@@ -30,10 +38,23 @@ const AdminAudit = lazy(() => import('./pages/admin/AdminMisc').then((m) => ({ d
 const AdminLeads = lazy(() => import('./pages/admin/AdminMisc').then((m) => ({ default: m.AdminLeads })));
 const AdminPayments = lazy(() => import('./pages/admin/AdminMisc').then((m) => ({ default: m.AdminPayments })));
 
+/** Top of the page on navigation; for links with a #section, scroll to it once it has rendered. */
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    if (!hash) window.scrollTo(0, 0);
+    if (!hash) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    let tries = 0;
+    const id = window.setInterval(() => {
+      const el = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (el || ++tries > 40) {
+        window.clearInterval(id);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 75);
+    return () => window.clearInterval(id);
   }, [pathname, hash]);
   return null;
 }
@@ -67,6 +88,12 @@ export default function App() {
         <Route path="/forgot-password" element={<GuestOnly><ForgotPassword /></GuestOnly>} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/refund-policy" element={<RefundPage />} />
+        <Route path="/delivery-policy" element={<DeliveryPage />} />
 
         <Route element={<RequireAuth><DashboardLayout /></RequireAuth>}>
           <Route path="/app" element={<Dashboard />} />

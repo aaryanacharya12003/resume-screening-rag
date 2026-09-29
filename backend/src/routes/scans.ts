@@ -14,6 +14,7 @@ import { createJob, getJob, optimizeResume, runningJobFor, TARGET_SCORE, updateJ
 import { MatchAnalysis } from '../types';
 import { audit } from '../lib/audit';
 import { isTemplateId, resumeToDocx, resumeToPdf } from '../lib/resumeExport';
+import { VectorStore } from '../services/vectorStore';
 import { assistantTurn } from '../services/assistantService';
 import * as limits from '../lib/rateLimit';
 import { structureKey, structureResume, StructuredResume } from '../lib/resumeStructure';
@@ -369,6 +370,9 @@ router.delete(
   ah(async (req, res) => {
     const scan = await findAccessibleScan(req.params.id, req.user!);
     await prisma.scan.delete({ where: { id: scan.id } });
+    // The scan's search index goes too (the privacy policy promises it). Best effort: a vector-store
+    // hiccup shouldn't undo a deletion the user asked for.
+    await new VectorStore().deleteSession(scan.sessionId).catch((e) => console.error('Vector cleanup failed:', e?.message || e));
     res.json({ ok: true });
   }),
 );

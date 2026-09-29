@@ -15,6 +15,7 @@ import orgRouter from './routes/org';
 import adminRouter from './routes/admin';
 import helmet from 'helmet';
 import { HttpError } from './lib/http';
+import { audit } from './lib/audit';
 import { apiGeneral } from './lib/rateLimit';
 
 // The Express app on its own: server.ts runs it as a long-lived server, api/index.js (Vercel) as a function.
@@ -65,7 +66,7 @@ app.use('/api', (_req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof ZodError) {
     return res.status(400).json({ error: err.issues[0]?.message || 'Invalid input' });
   }
@@ -79,6 +80,13 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     return res.status(err.status).json({ error: err.message });
   }
   console.error('❌', err);
+  // Vercel keeps runtime logs for about an hour on the free plan, so unexpected errors are also kept
+  // in the audit log (Admin → Audit log) with enough detail to diagnose them later.
+  void audit(req.user?.id ?? null, 'server.error', `${req.method} ${req.originalUrl.split('?')[0]}`, {
+    message: String(err?.message ?? err).slice(0, 500),
+    code: err?.code,
+    stack: String(err?.stack ?? '').split('\n').slice(0, 6).join('\n'),
+  });
   res.status(500).json({ error: 'Something went wrong. Please try again.' });
 });
 

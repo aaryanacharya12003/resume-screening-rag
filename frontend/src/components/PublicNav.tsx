@@ -9,11 +9,11 @@ export function PublicNav() {
       <div className="wrap">
         <Logo />
         <ul>
-          <li><a href="/#how">How it works</a></li>
-          <li><a href="/#checks">Checks</a></li>
+          <li><Link to="/#how">How it works</Link></li>
+          <li><Link to="/#checks">Checks</Link></li>
           <li><Link to="/pricing">Pricing</Link></li>
           <li><Link to="/pricing#enterprise">For teams</Link></li>
-          <li><a href="/#faq">FAQ</a></li>
+          <li><Link to="/#faq">FAQ</Link></li>
         </ul>
         <div className="row" style={{ gap: 8 }}>
           {me ? (

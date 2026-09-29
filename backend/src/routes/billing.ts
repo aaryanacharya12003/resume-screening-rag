@@ -47,6 +47,28 @@ router.post(
   }),
 );
 
+/** General contact form (support, billing, privacy…). Stored with the sales leads for the admin panel. */
+router.post(
+  '/contact',
+  limits.contactSales,
+  ah(async (req, res) => {
+    // Honeypot: a hidden field real visitors never fill. Bots get the normal answer but nothing is stored.
+    if (typeof req.body?.website === 'string' && req.body.website.trim()) return res.status(201).json({ ok: true });
+    const data = z
+      .object({
+        name: z.string().trim().min(2, 'Please enter your name').max(100),
+        email: z.string().trim().email('Please enter a valid email'),
+        topic: z.enum(['Support', 'Billing and refunds', 'Sales and teams', 'Privacy and data', 'Something else']).default('Support'),
+        message: z.string().trim().min(10, 'Please write a little more so we can help').max(2000),
+      })
+      .parse(req.body);
+    await prisma.contactLead.create({
+      data: { name: data.name, email: data.email, company: `Contact: ${data.topic}`, message: data.message },
+    });
+    res.status(201).json({ ok: true });
+  }),
+);
+
 /** Grants what a paid payment bought. Idempotent: only acts on the CREATED → PAID transition. */
 export async function activatePayment(payment: Payment, razorpayPaymentId: string) {
   const updated = await prisma.payment.updateMany({

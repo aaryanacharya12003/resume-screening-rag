@@ -10,7 +10,7 @@ const RESEND_SECONDS = 60;
 
 /** After sign-up: enter the 6-digit code emailed to the new account. */
 export default function VerifyEmail() {
-  const { me, loading, refresh, logout } = useAuth();
+  const { me, loading, refresh, logout, leaving } = useAuth();
   const [params] = useSearchParams();
   const nav = useNavigate();
   const toast = useToast();
@@ -41,7 +41,7 @@ export default function VerifyEmail() {
   }, [wait]);
 
   if (loading) return <FullPageSpinner />;
-  if (!me) return <Navigate to="/login" replace />;
+  if (!me) return <Navigate to={leaving ? '/register' : '/login'} replace />;
   const next = params.get('next');
   if (me.user.emailVerified) return <Navigate to={next || homeFor(me.user.role)} replace />;
 
@@ -131,7 +131,7 @@ export default function VerifyEmail() {
           </p>
           <p className="small muted" style={{ textAlign: 'center' }}>
             Wrong email?{' '}
-            <button type="button" className="link link--button" onClick={async () => { await logout(); nav('/register', { replace: true }); }}>
+            <button type="button" className="link link--button" onClick={() => void logout()}>
               Sign up again
             </button>
           </p>

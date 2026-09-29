@@ -86,6 +86,23 @@ export class VectorStore {
     }));
   }
 
+  /** Removes every vector of a scan (ids are "${sessionId}:${type}:${n}"). */
+  async deleteSession(sessionId: string): Promise<number> {
+    const index = this.pinecone.index(this.indexName);
+    let removed = 0;
+    let token: string | undefined;
+    do {
+      const page = await index.listPaginated({ prefix: `${sessionId}:`, paginationToken: token });
+      const ids = (page.vectors ?? []).map((v) => v.id).filter((id): id is string => !!id);
+      if (ids.length) {
+        await index.deleteMany(ids);
+        removed += ids.length;
+      }
+      token = page.pagination?.next;
+    } while (token);
+    return removed;
+  }
+
   async getAllChunks(sessionId: string, type: 'resume' | 'jobDescription'): Promise<string[]> {
     const index = this.pinecone.index(this.indexName);
     

@@ -1,5 +1,5 @@
 import { Suspense, useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Logo } from './Logo';
 import { useAuth } from '../lib/auth';
 
@@ -43,7 +43,6 @@ function Group({ label, items }: { label: string; items: Item[] }) {
 
 export function DashboardLayout() {
   const { me, logout } = useAuth();
-  const nav = useNavigate();
   const loc = useLocation();
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [loc.pathname]);
@@ -82,10 +81,8 @@ export function DashboardLayout() {
           <button
             className="btn btn--sm btn--light"
             style={{ padding: '6px 10px' }}
-            onClick={async () => {
-              await logout();
-              nav('/');
-            }}
+            // The sign-in guard sends the visitor home once the session is cleared.
+            onClick={() => void logout()}
           >
             Log out
           </button>

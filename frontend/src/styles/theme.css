@@ -248,7 +248,7 @@ a { color: inherit; }
 
 /* footer */
 .footer { background: var(--bg-2); border-top: 1px solid var(--line); padding-block: 48px 20px; overflow: hidden; }
-.footer__cols { display: grid; grid-template-columns: repeat(3, auto) 1fr; gap: 32px 56px; font-size: 14px; }
+.footer__cols { display: grid; grid-template-columns: repeat(4, auto) 1fr; gap: 32px 56px; font-size: 14px; }
 .footer__cols h4 { margin: 0 0 10px; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
 .footer__cols ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .footer__cols a { text-decoration: none; }
