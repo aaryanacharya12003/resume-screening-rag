@@ -41,6 +41,9 @@ async function viaOpenRouter(params: CreateParams, groqError: unknown) {
     return await openrouter!.chat.completions.create({
       ...rest,
       model: OPENROUTER_MODEL,
+      // OpenRouter picks a host per request; the default choice took ~49 s for one scan. Prefer the
+      // fastest hosts (throughput), so a fallback scan takes seconds like it does on Groq.
+      ...({ provider: { sort: 'throughput' } } as object),
       ...(reasoning_effort ? ({ reasoning: { effort: reasoning_effort } } as object) : {}),
     } as CreateParams);
   } catch (e) {
