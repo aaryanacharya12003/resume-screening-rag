@@ -6,6 +6,7 @@ import { razorpay } from '../config/razorpay';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { ah, HttpError } from '../lib/http';
 import { audit } from '../lib/audit';
+import { sendRefundConfirmation } from '../lib/mailer';
 
 const router = Router();
 router.use(requireAuth, requireRole('SUPER_ADMIN'));
@@ -248,7 +249,10 @@ router.get(
 router.post(
   '/payments/:id/refund',
   ah(async (req, res) => {
-    const payment = await prisma.payment.findUniqueOrThrow({ where: { id: req.params.id } });
+    const payment = await prisma.payment.findUniqueOrThrow({
+      where: { id: req.params.id },
+      include: { user: { select: { email: true, name: true } }, plan: { select: { name: true } } },
+    });
     if (payment.status !== 'PAID') throw new HttpError(400, 'Only paid payments can be refunded');
     if (razorpay && payment.razorpayPaymentId && !payment.razorpayPaymentId.startsWith('dev_')) {
       try {
@@ -258,8 +262,26 @@ router.post(
       }
     }
     await prisma.payment.update({ where: { id: payment.id }, data: { status: 'REFUNDED' } });
-    await audit(req.user!.id, 'admin.payment.refund', payment.id, { amount: payment.amountInr });
-    res.json({ ok: true });
+    // The money has moved; a mail problem is reported to the admin, never undoes the refund.
+    let emailed = false;
+    let emailError: string | undefined;
+    try {
+      const sent = await sendRefundConfirmation(
+        payment.user.email,
+        payment.user.name,
+        payment.plan.name,
+        payment.amountInr,
+        payment.createdAt,
+        payment.razorpayPaymentId,
+        payment.orgId ? '/org/billing' : '/app/billing',
+      );
+      emailed = sent.delivered;
+      if (!emailed) emailError = 'Email is not set up on the server (SMTP settings missing)';
+    } catch (e: any) {
+      emailError = e?.message || 'unknown mail error';
+    }
+    await audit(req.user!.id, 'admin.payment.refund', payment.id, { amount: payment.amountInr, emailed, emailError });
+    res.json({ ok: true, emailed, emailError });
   }),
 );
 

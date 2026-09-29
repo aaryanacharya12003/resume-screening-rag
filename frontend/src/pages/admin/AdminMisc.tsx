@@ -20,9 +20,10 @@ export function AdminPayments() {
   const refund = async (p: AdminPayment) => {
     if (!window.confirm(`Refund ${inr(p.amountInr)} to ${p.user.email}? This calls Razorpay and cannot be undone.`)) return;
     try {
-      await api.post(`/admin/payments/${p.id}/refund`);
+      const { data: r } = await api.post<{ emailed: boolean; emailError?: string }>(`/admin/payments/${p.id}/refund`);
       await qc.invalidateQueries({ queryKey: ['admin'] });
-      toast('Refund issued');
+      if (r.emailed) toast(`Refund issued. Confirmation emailed to ${p.user.email}`);
+      else toast(`Refund issued, but the email to ${p.user.email} failed: ${r.emailError ?? 'unknown error'}`, true);
     } catch (e) {
       toast(errMsg(e), true);
     }
