@@ -180,9 +180,11 @@ router.post(
       })
       .parse(req.body ?? {});
     // A result must belong to a bullet that is really in this resume.
-    const lineKey = (l: string) => l.replace(/^[\s\-–•*▪‣●◦·]+/, '').replace(/\s+/g, ' ').trim().toLowerCase();
-    const lines = new Set(resumeText.split('\n').map(lineKey));
-    const confirmedResults = rawResults.filter((r) => lines.has(lineKey(r.bullet)));
+    // PDF text wraps long bullets across lines, and the app joins them back before asking for a
+    // result, so the bullet is matched against the whole text with line breaks and spacing ignored.
+    const flat = (t: string) => t.replace(/^[\s\-–•*▪‣●◦·]+/gm, '').replace(/\s+/g, ' ').trim().toLowerCase();
+    const resumeFlat = flat(resumeText);
+    const confirmedResults = rawResults.filter((r) => resumeFlat.includes(flat(r.bullet)));
 
     // Takes 1-3 minutes (several LLM calls), so it runs in the background and the client polls.
     const job = await createJob({ id: crypto.randomUUID(), userId: user.id, scanId: scan.id });

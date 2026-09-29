@@ -202,3 +202,6 @@ code { font: 600 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; backgroun
 .prose .split, .prose .contact-split { max-width: none; }
 .contact-split { display: grid; grid-template-columns: 1fr 1.2fr; gap: 28px; align-items: start; }
 @media (max-width: 760px) { .contact-split { grid-template-columns: 1fr; } }
+
+/* Boost finished without saving: guidance, not an error */
+.boost-notice { gap: 8px; padding: 14px 16px; border: 2px solid #1C1B3F; border-radius: 14px; background: var(--paper); box-shadow: 3px 3px 0 0 var(--accent); color: var(--ink); font-size: 14.5px; }

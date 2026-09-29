@@ -10,6 +10,9 @@ import { TemplateId, TemplatePicker, useTemplateChoice } from './TemplatePicker'
 
 const TARGET = 90;
 
+/** Boost ended without saving because it needs the candidate's input (not an error). */
+const NEEDS_INPUT = /rewording alone|every version we tried|couldn't produce an honest/i;
+
 /** Chips that name a credential need extra care: claiming an unearned certification is easy to catch and costly. */
 const isCertification = (s: string) =>
   /certif|\b(CKA|CKS|CKAD|CISSP|CISM|CEH|OSCP|PMP)\b|\b(AZ|SC|GH|DP|AI)-\d{3}\b|associate|professional/i.test(s);
@@ -189,16 +192,38 @@ export function BoostCard({ scan, canUse }: { scan: Scan; canUse: boolean }) {
         </div>
       )}
 
-      {err && (
-        <div className="form-error stack" style={{ gap: 8 }}>
-          <span>{err.text}</span>
-          {err.blockers && err.blockers.length > 0 && (
-            <div className="row" style={{ gap: 6 }}>
-              {err.blockers.map((b, i) => <span key={i} className="chip chip--p">{b}</span>)}
-            </div>
-          )}
-        </div>
-      )}
+      {err &&
+        (NEEDS_INPUT.test(err.text) ? (
+          // Not a failure: the safety rule kept the original because nothing could be added honestly.
+          <div className="boost-notice stack" role="status">
+            <b>Nothing saved yet: your resume needs real details to go higher</b>
+            <span>{err.text}</span>
+            {err.blockers && err.blockers.length > 0 && (
+              <>
+                <span className="small">Skills this role expects that your resume doesn't show. Tick the ones you really have, then Boost again:</span>
+                <div className="row" style={{ gap: 6 }}>
+                  {[...new Set(err.blockers)].map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      className={`chip ${b in picked ? 'chip--g' : 'chip--plain'}`}
+                      style={{ cursor: 'pointer', padding: '6px 12px', fontSize: 12 }}
+                      aria-pressed={b in picked}
+                      onClick={() => toggle(b)}
+                    >
+                      {b in picked ? '✓ ' : '+ '}
+                      {b}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        ) : (
+          <div className="form-error stack" style={{ gap: 8 }}>
+            <span>{err.text}</span>
+          </div>
+        ))}
 
       {job ? (
         <div className="result" style={{ border: '1.5px solid var(--line)' }}>
