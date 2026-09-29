@@ -91,12 +91,14 @@ export function sendRefundConfirmation(to: string, name: string, planName: strin
         `Hi ${esc(name.split(' ')[0])},`,
         `We've refunded <b style="color:#1C1B3F">${amount}</b> for your ${esc(planName)} payment on ${date}.`,
         'The money goes back to the card, UPI or bank account you paid with. It usually shows up within 5 to 7 business days, depending on your bank.',
+        `What this payment unlocked on ${esc(planName)} has ended with the refund. You can buy it again any time from your billing page.`,
         ...(ref ? [`Razorpay payment ID: <b style="color:#1C1B3F">${esc(ref)}</b>. Your bank can use this to trace the refund.`] : []),
       ],
       cta: { label: 'View billing', url: appUrl(billingPath) },
       footnote: "Questions about this refund? Reply to this email or use the contact page and we'll help.",
     }),
-    `We've refunded ${amount} for your ${planName} payment on ${date}.\nIt usually reaches your original payment method within 5 to 7 business days.${ref ? `\nRazorpay payment ID: ${ref}` : ''}\n\nView billing: ${appUrl(billingPath)}`,
+    `We've refunded ${amount} for your ${planName} payment on ${date}.\nIt usually reaches your original payment method within 5 to 7 business days.
+What this payment unlocked has ended; you can buy it again any time.${ref ? `\nRazorpay payment ID: ${ref}` : ''}\n\nView billing: ${appUrl(billingPath)}`,
   );
 }
 

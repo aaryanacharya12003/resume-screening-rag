@@ -7,6 +7,7 @@ import { requireAuth, requireRole } from '../middleware/auth';
 import { ah, HttpError } from '../lib/http';
 import { audit } from '../lib/audit';
 import { sendRefundConfirmation } from '../lib/mailer';
+import { revokePayment } from './billing';
 
 const router = Router();
 router.use(requireAuth, requireRole('SUPER_ADMIN'));
@@ -262,6 +263,7 @@ router.post(
       }
     }
     await prisma.payment.update({ where: { id: payment.id }, data: { status: 'REFUNDED' } });
+    await revokePayment(payment);
     // The money has moved; a mail problem is reported to the admin, never undoes the refund.
     let emailed = false;
     let emailError: string | undefined;

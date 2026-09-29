@@ -100,6 +100,39 @@ export async function activatePayment(payment: Payment, razorpayPaymentId: strin
   await audit(payment.userId, 'payment.paid', payment.id, { plan: plan.code, amount: payment.amountInr, cycle: payment.cycle });
 }
 
+/** Takes back what a refunded payment granted, so the plan ends and can be bought again. */
+export async function revokePayment(payment: Payment) {
+  const plan = await prisma.plan.findUniqueOrThrow({ where: { id: payment.planId } });
+
+  if (payment.cycle.startsWith('seats:')) {
+    const seats = Number(payment.cycle.split(':')[1]);
+    const org = await prisma.organization.findUnique({ where: { id: payment.orgId! } });
+    if (org) await prisma.organization.update({ where: { id: org.id }, data: { extraSeats: Math.max(0, org.extraSeats - seats) } });
+  } else if (plan.code === 'pro') {
+    // Pro is one-time with no end date; the newest active Pro subscription is the one this payment bought.
+    const sub = await prisma.subscription.findFirst({
+      where: { userId: payment.userId, planId: plan.id, status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (sub) await prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED', periodEnd: new Date() } });
+  } else if (plan.code === 'team') {
+    // Take the paid period back off the end; if nothing paid remains, the plan ends now.
+    const sub = await prisma.subscription.findFirst({
+      where: { orgId: payment.orgId!, planId: plan.id, status: 'ACTIVE', periodEnd: { gt: new Date() } },
+      orderBy: { periodEnd: 'desc' },
+    });
+    if (sub?.periodEnd) {
+      const periodEnd = new Date(sub.periodEnd);
+      if (payment.cycle === 'yearly') periodEnd.setFullYear(periodEnd.getFullYear() - 1);
+      else periodEnd.setMonth(periodEnd.getMonth() - 1);
+      await prisma.subscription.update({
+        where: { id: sub.id },
+        data: periodEnd > new Date() ? { periodEnd } : { status: 'CANCELLED', periodEnd: new Date() },
+      });
+    }
+  }
+}
+
 router.post(
   '/checkout',
   requireAuth,
